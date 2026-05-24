@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "FastCoin",
+    "subtitle": "快捷记账"
+  },
+  "tabs": {
+    "entry": "记账",
+    "stats": "统计",
+    "settings": "设置"
+  },
+  "expense": {
+    "amount": "输入金额",
+    "source": "支付来源",
+    "category": "分类（可选）",
+    "note": "备注（可选）",
+    "date": "日期",
+    "today": "今天",
+    "yesterday": "昨天",
+    "submit": "记录消费"
+  },
+  "stats": {
+    "title": "财务统计",
+    "periodTotal": "周期总支出",
+    "todayTotal": "今日支出",
+    "dailyAvg": "日均消费",
+    "periodProgress": "周期进度",
+    "sourceDist": "支付来源分布",
+    "trend": "消费趋势",
+    "noData": "暂无数据"
+  },
+  "settings": {
+    "title": "设置",
+    "sources": "支付来源",
+    "periods": "记账周期",
+    "export": "导入导出",
+    "general": "通用设置"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "FastCoin",
+    "subtitle": "Quick Expense Tracker"
+  },
+  "tabs": {
+    "entry": "Record",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "expense": {
+    "amount": "Enter amount",
+    "source": "Payment source",
+    "category": "Category (optional)",
+    "note": "Note (optional)",
+    "date": "Date",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "submit": "Record Expense"
+  },
+  "stats": {
+    "title": "Financial Statistics",
+    "periodTotal": "Period Total",
+    "todayTotal": "Today's Total",
+    "dailyAvg": "Daily Average",
+    "periodProgress": "Period Progress",
+    "sourceDist": "Source Distribution",
+    "trend": "Spending Trend",
+    "noData": "No data yet"
+  },
+  "settings": {
+    "title": "Settings",
+    "sources": "Payment Sources",
+    "periods": "Accounting Periods",
+    "export": "Import/Export",
+    "general": "General Settings"
+  }
+}
