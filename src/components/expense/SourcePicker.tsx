@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { PaymentSource } from "@/types";
 import * as api from "@/lib/tauri";
-import { useUIStore } from "@/stores/uiStore";
+import { useDataStore } from "@/stores/dataStore";
+
 
 interface SourcePickerProps {
   selectedId: string | null;
@@ -9,12 +11,14 @@ interface SourcePickerProps {
 }
 
 export function SourcePicker({ selectedId, onSelect }: SourcePickerProps) {
+  const { t } = useTranslation();
   const [sources, setSources] = useState<PaymentSource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const refreshKey = useDataStore((s) => s.refreshKey);
 
   useEffect(() => {
     loadSources();
-  }, []);
+  }, [refreshKey]);
 
   const loadSources = async () => {
     try {
@@ -31,7 +35,7 @@ export function SourcePicker({ selectedId, onSelect }: SourcePickerProps) {
     return (
       <div className="flex gap-2 overflow-x-auto py-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-10 w-20 bg-gray-100 rounded-full animate-pulse shrink-0" />
+          <div key={i} className="h-10 w-20 bg-gray-100 dark:bg-gray-700 rounded-full animate-pulse shrink-0" />
         ))}
       </div>
     );
@@ -39,7 +43,7 @@ export function SourcePicker({ selectedId, onSelect }: SourcePickerProps) {
 
   return (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-gray-500">支付来源</label>
+      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('expense.source')}</label>
       <div className="flex gap-2 overflow-x-auto py-1 scrollbar-thin">
         {sources.map((src) => (
           <button
@@ -51,7 +55,7 @@ export function SourcePicker({ selectedId, onSelect }: SourcePickerProps) {
               ${
                 selectedId === src.id
                   ? "border-current shadow-sm"
-                  : "border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             style={
               selectedId === src.id

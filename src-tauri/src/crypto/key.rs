@@ -3,7 +3,7 @@ use pbkdf2::pbkdf2_hmac;
 use rand::Rng;
 use sha2::Sha256;
 
-const PBKDF2_ITERATIONS: u32 = 210_000;
+const PBKDF2_ITERATIONS: u32 = 600_000;
 const SALT_LENGTH: usize = 16;
 
 pub fn generate_salt() -> Vec<u8> {

@@ -1,9 +1,11 @@
 import { useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useUIStore } from "@/stores/uiStore";
 import { ExpenseForm } from "./ExpenseForm";
 import { ExpenseList } from "./ExpenseList";
 
 export function ExpensePanel() {
+  const { t } = useTranslation();
   const leftFormFraction = useUIStore((s) => s.leftFormFraction);
   const setLeftFormFraction = useUIStore((s) => s.setLeftFormFraction);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -43,9 +45,9 @@ export function ExpensePanel() {
 
   return (
     <div ref={panelRef} className="flex flex-col h-full">
-      <div className="px-4 pt-4 pb-2 border-b border-gray-100 shrink-0">
-        <h1 className="text-xl font-bold text-gray-900">FastCoin</h1>
-        <p className="text-sm text-gray-500">快捷记账</p>
+      <div className="px-4 pt-4 pb-2 border-b border-gray-100 shrink-0 dark:border-gray-700">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('app.title')}</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('app.subtitle')}</p>
       </div>
 
       {/* Form area */}
@@ -59,9 +61,9 @@ export function ExpensePanel() {
       {/* Drag handle */}
       <div
         onMouseDown={onMouseDown}
-        className="h-1.5 bg-gray-100 hover:bg-primary-300 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group"
+        className="h-1.5 bg-gray-100 hover:bg-primary-300 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group dark:bg-gray-700"
       >
-        <div className="w-8 h-0.5 rounded bg-gray-300 group-hover:bg-primary-500" />
+        <div className="w-8 h-0.5 rounded bg-gray-300 group-hover:bg-primary-500 dark:bg-gray-500" />
       </div>
 
       {/* Recent records area */}

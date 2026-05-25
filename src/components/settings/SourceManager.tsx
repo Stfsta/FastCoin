@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { PaymentSource } from "@/types";
 import * as api from "@/lib/tauri";
 import { useUIStore } from "@/stores/uiStore";
+import { useDataStore } from "@/stores/dataStore";
 import { Modal } from "@/components/common/Modal";
 import { Button } from "@/components/common/Button";
-
-const SOURCE_TYPE_LABELS: Record<string, string> = {
-  bank_card: "银行卡",
-  alipay: "支付宝",
-  wechat: "微信",
-  cash: "现金",
-  other: "其他",
-};
 
 const PRESET_COLORS = [
   "#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6",
@@ -19,12 +13,12 @@ const PRESET_COLORS = [
 ];
 
 export function SourceManager() {
+  const { t } = useTranslation();
   const [sources, setSources] = useState<PaymentSource[]>([]);
   const [editingSource, setEditingSource] = useState<PaymentSource | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const addToast = useUIStore((s) => s.addToast);
 
-  // Form state
   const [formName, setFormName] = useState("");
   const [formType, setFormType] = useState("other");
   const [formIcon, setFormIcon] = useState("💳");
@@ -39,7 +33,7 @@ export function SourceManager() {
       const data = await api.getPaymentSources();
       setSources(data);
     } catch (e) {
-      addToast("加载支付来源失败", "error");
+      addToast(t('settings.loadSourcesFail'), "error");
     }
   };
 
@@ -52,7 +46,7 @@ export function SourceManager() {
 
   const handleAdd = async () => {
     if (!formName.trim()) {
-      addToast("请输入来源名称", "error");
+      addToast(t('settings.needName'), "error");
       return;
     }
     try {
@@ -62,12 +56,13 @@ export function SourceManager() {
         icon: formIcon,
         color: formColor,
       });
-      addToast("添加成功", "success");
+      useDataStore.getState().triggerRefresh();
+      addToast(t('settings.addSuccess'), "success");
       setShowAdd(false);
       resetForm();
       loadSources();
     } catch (e) {
-      addToast(`添加失败: ${e}`, "error");
+      addToast(t('settings.addFail', { error: String(e) }), "error");
     }
   };
 
@@ -81,38 +76,53 @@ export function SourceManager() {
         icon: formIcon,
         color: formColor,
       });
-      addToast("修改成功", "success");
+      useDataStore.getState().triggerRefresh();
+      addToast(t('settings.editSuccess'), "success");
       setEditingSource(null);
       loadSources();
     } catch (e) {
-      addToast(`修改失败: ${e}`, "error");
+      addToast(t('settings.editFail', { error: String(e) }), "error");
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await api.deletePaymentSource(id);
-      addToast("已删除", "success");
+      useDataStore.getState().triggerRefresh();
+      addToast(t('settings.deleted'), "success");
       loadSources();
     } catch (e) {
-      addToast(`删除失败: ${e}`, "error");
+      addToast(t('settings.deleteFail', { error: String(e) }), "error");
     }
   };
 
   const openEdit = (src: PaymentSource) => {
     setEditingSource(src);
     setFormName(src.name);
-    setFormType(src.sourceType);
+    setFormType(src.type);
     setFormIcon(src.icon);
     setFormColor(src.color);
   };
 
+  const typeLabel = (tp: string) => {
+    const map: Record<string, string> = {
+      bank_card: t('settings.bankCard'),
+      alipay: t('settings.alipay'),
+      wechat: t('settings.wechat'),
+      cash: t('settings.cash'),
+      other: t('settings.other'),
+    };
+    return map[tp] || tp;
+  };
+
+  const typeOptions = ["bank_card", "alipay", "wechat", "cash", "other"] as const;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">管理支付来源</h3>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('settings.sources')}</h3>
         <Button size="sm" onClick={() => { resetForm(); setShowAdd(true); }}>
-          + 添加
+          + {t('settings.add')}
         </Button>
       </div>
 
@@ -123,7 +133,7 @@ export function SourceManager() {
           .map((src) => (
             <div
               key={src.id}
-              className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-lg"
+              className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg"
             >
               <span
                 className="w-3 h-3 rounded-full"
@@ -131,12 +141,12 @@ export function SourceManager() {
               />
               <span className="text-lg">{src.icon}</span>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{src.name}</p>
-                <p className="text-xs text-gray-500">{SOURCE_TYPE_LABELS[src.sourceType] || src.sourceType}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{src.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{typeLabel(src.type)}</p>
               </div>
               <button
                 onClick={() => openEdit(src)}
-                className="p-1.5 text-gray-400 hover:text-primary-600"
+                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-primary-600"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -145,7 +155,7 @@ export function SourceManager() {
               </button>
               <button
                 onClick={() => handleDelete(src.id)}
-                className="p-1.5 text-gray-400 hover:text-red-500"
+                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -156,47 +166,46 @@ export function SourceManager() {
           ))}
       </div>
 
-      {/* Add/Edit Modal */}
       <Modal
         isOpen={showAdd || !!editingSource}
         onClose={() => { setShowAdd(false); setEditingSource(null); }}
-        title={editingSource ? "编辑支付来源" : "添加支付来源"}
+        title={editingSource ? t('settings.editSource') : t('settings.addSource')}
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">名称</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.name')}</label>
             <input
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg
                 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              placeholder="如: 工商银行卡"
+              placeholder={t('settings.namePlaceholder')}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">类型</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.type')}</label>
             <select
               value={formType}
               onChange={(e) => setFormType(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
             >
-              {Object.entries(SOURCE_TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+              {typeOptions.map((k) => (
+                <option key={k} value={k}>{typeLabel(k)}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">图标 (Emoji)</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.icon')}</label>
             <input
               type="text"
               value={formIcon}
               onChange={(e) => setFormIcon(e.target.value.slice(0, 2))}
-              className="w-full px-3 py-2 text-lg text-center border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2 text-lg text-center border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">颜色</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.color')}</label>
             <div className="flex gap-2 flex-wrap">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -214,7 +223,7 @@ export function SourceManager() {
             className="w-full"
             onClick={editingSource ? handleEdit : handleAdd}
           >
-            {editingSource ? "保存" : "添加"}
+            {editingSource ? t('settings.save') : t('settings.add')}
           </Button>
         </div>
       </Modal>

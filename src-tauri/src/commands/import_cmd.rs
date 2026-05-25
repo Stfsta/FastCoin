@@ -14,11 +14,13 @@ pub fn import_preview(
 ) -> Result<import_service::ImportDiff, String> {
     let conn = state.db.lock().map_err(|e| e.to_string())?;
 
-    let file_content = std::fs::read_to_string(&file_path).map_err(|e| e.to_string())?;
+    let file_content = std::fs::read_to_string(&file_path)
+        .map_err(|e| format!("无法读取文件: {}", e))?;
     let encrypted: EncryptedFile =
-        serde_json::from_str(&file_content).map_err(|e| format!("Invalid file format: {}", e))?;
+        serde_json::from_str(&file_content).map_err(|e| format!("文件格式无效: {}", e))?;
 
-    import_service::compute_import_preview(&conn, &encrypted, &password).map_err(|e| e.to_string())
+    import_service::compute_import_preview(&conn, &encrypted, &password)
+        .map_err(|e| format!("预览失败: {}", e))
 }
 
 #[tauri::command]
@@ -30,10 +32,11 @@ pub fn import_confirm(
 ) -> Result<(), String> {
     let conn = state.db.lock().map_err(|e| e.to_string())?;
 
-    let file_content = std::fs::read_to_string(&file_path).map_err(|e| e.to_string())?;
+    let file_content = std::fs::read_to_string(&file_path)
+        .map_err(|e| format!("无法读取文件: {}", e))?;
     let encrypted: EncryptedFile =
-        serde_json::from_str(&file_content).map_err(|e| format!("Invalid file format: {}", e))?;
+        serde_json::from_str(&file_content).map_err(|e| format!("文件格式无效: {}", e))?;
 
     import_service::apply_import(&conn, &encrypted, &password, &strategy)
-        .map_err(|e| e.to_string())
+        .map_err(|e| format!("导入失败: {}", e))
 }

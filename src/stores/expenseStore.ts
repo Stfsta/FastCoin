@@ -29,7 +29,7 @@ interface ExpenseState {
   clearError: () => void;
 }
 
-export const useExpenseStore = create<ExpenseState>((set, get) => ({
+export const useExpenseStore = create<ExpenseState>((set, _get) => ({
   expenses: [],
   isLoading: false,
   error: null,

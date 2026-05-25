@@ -43,6 +43,7 @@ pub fn add_expense(
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateExpenseArgs {
     pub id: String,
     pub amount: Option<i64>,

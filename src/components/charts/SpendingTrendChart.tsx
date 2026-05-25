@@ -1,4 +1,6 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useTranslation } from "react-i18next";
+import { formatAmount } from "@/utils/format";
 
 interface DailyTotal {
   date: string;
@@ -10,10 +12,12 @@ interface SpendingTrendChartProps {
 }
 
 export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
+  const { t } = useTranslation();
+
   if (dailySeries.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-gray-100 text-center">
-        <p className="text-gray-400 text-sm">暂无消费趋势数据</p>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 text-center">
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('stats.noData')}</p>
       </div>
     );
   }
@@ -21,12 +25,12 @@ export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
   const data = dailySeries.map((d) => ({
     ...d,
     totalYuan: d.total / 100,
-    label: d.date.slice(5), // MM-DD
+    label: d.date.slice(5),
   }));
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">消费趋势</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{t('stats.trend')}</h3>
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
           <defs>
@@ -37,10 +41,10 @@ export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#9CA3AF" />
-          <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" tickFormatter={(v) => `¥${v}`} />
+          <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" tickFormatter={(v) => formatAmount(v * 100)} />
           <Tooltip
-            formatter={(value: number) => [`¥${value.toFixed(2)}`, "金额"]}
-            labelFormatter={(label) => `日期: ${label}`}
+            formatter={(value: number) => [formatAmount(value * 100), t('stats.periodTotal')]}
+            labelFormatter={(label) => `${t('expense.date')}: ${label}`}
           />
           <Area
             type="monotone"

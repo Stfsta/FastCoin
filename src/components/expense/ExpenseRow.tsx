@@ -1,7 +1,10 @@
-import { useState } from "react";
-import type { Expense } from "@/types";
+import { useState, useEffect } from "react";
+import i18n from "@/i18n";
+import type { Expense, PaymentSource } from "@/types";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
+import { formatAmount } from "@/utils/format";
+import * as api from "@/lib/tauri";
 
 interface ExpenseRowProps {
   expense: Expense;
@@ -9,52 +12,58 @@ interface ExpenseRowProps {
 
 export function ExpenseRow({ expense }: ExpenseRowProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sources, setSources] = useState<PaymentSource[]>([]);
   const deleteExpense = useExpenseStore((s) => s.deleteExpense);
   const addToast = useUIStore((s) => s.addToast);
+
+  useEffect(() => {
+    api.getPaymentSources().then(setSources).catch(() => {});
+  }, []);
+
+  const source = sources.find((s) => s.id === expense.sourceId);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       await deleteExpense(expense.id);
-      addToast("已删除", "success");
+      addToast(i18n.t("expense.deleted"), "success");
     } catch (e) {
-      addToast(`删除失败: ${e}`, "error");
+      addToast(i18n.t("expense.deleteFail", { error: String(e) }), "error");
       setIsDeleting(false);
     }
   };
 
-  const amountYuan = (expense.amount / 100).toFixed(2);
 
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-lg border border-gray-100
+      className={`flex items-center gap-3 px-3 py-2.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700
         transition-all ${isDeleting ? "opacity-50 scale-95" : ""}`}
     >
       {/* Source icon */}
       <div
         className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0"
-        style={{ backgroundColor: "#f3f4f6" }}
+        style={{ backgroundColor: source?.color ? `${source.color}28` : "#f3f4f6" }}
       >
-        💬
+        {source?.icon || "💳"}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">-¥{amountYuan}</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">-{formatAmount(expense.amount)}</span>
           {expense.categoryId && (
-            <span className="text-2xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">
+            <span className="text-2xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
               🍔
             </span>
           )}
         </div>
         {expense.note && (
-          <p className="text-xs text-gray-400 truncate">{expense.note}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{expense.note}</p>
         )}
       </div>
 
       <button
         onClick={handleDelete}
-        className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50
+        className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30
           transition-colors shrink-0"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

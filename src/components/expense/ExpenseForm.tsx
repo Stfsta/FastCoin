@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { SourcePicker } from "./SourcePicker";
 import { CategoryPicker } from "./CategoryPicker";
 import { NoteInput } from "./NoteInput";
 import { DateQuickSelect } from "./DateQuickSelect";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
+import { formatAmount } from "@/utils/format";
+import { useSettingsStore, CURRENCY_SYMBOLS } from "@/stores/settingsStore";
 import { formatDate } from "date-fns";
 
 export function ExpenseForm() {
+  const { t } = useTranslation();
+  const currentCurrency = useSettingsStore((s) => s.settings?.defaultCurrency || "CNY");
   const [amount, setAmount] = useState("");
   const [displayAmount, setDisplayAmount] = useState("");
   const [sourceId, setSourceId] = useState<string | null>(null);
@@ -59,7 +64,7 @@ export function ExpenseForm() {
 
   const handleSubmit = async () => {
     if (!amount || !sourceId) {
-      addToast("请输入金额并选择支付来源", "error");
+      addToast(t('expense.needAmount'), "error");
       return;
     }
     setIsSubmitting(true);
@@ -72,7 +77,7 @@ export function ExpenseForm() {
         note,
         date,
       });
-      addToast("记账成功", "success");
+      addToast(t('expense.success'), "success");
       // Reset form for next entry
       setAmount("");
       setDisplayAmount("");
@@ -80,16 +85,17 @@ export function ExpenseForm() {
       setNote("");
       setDate(formatDate(new Date(), "yyyy-MM-dd"));
     } catch (e) {
-      addToast(`记账失败: ${e}`, "error");
+      addToast(t('expense.fail', { error: String(e) }), "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Keyboard shortcut: Enter to submit
+  // Keyboard shortcut: Enter (or Ctrl+Enter) to submit
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault();
         handleSubmit();
       }
     };
@@ -102,14 +108,14 @@ export function ExpenseForm() {
   return (
     <div className="p-4 space-y-4">
       {/* Amount Display & Input */}
-      <div className="bg-gray-50 rounded-xl p-4">
+      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
         <div className="flex items-baseline gap-1 mb-2">
-          <span className="text-gray-400 text-sm">¥</span>
-          <span className="text-3xl font-bold text-gray-900">
+          <span className="text-gray-400 dark:text-gray-500 text-sm">{CURRENCY_SYMBOLS[currentCurrency]}</span>
+          <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             {displayAmount || "0"}
           </span>
-          <span className="text-gray-400 text-sm ml-auto">
-            = {amountInYuan} 元
+          <span className="text-gray-400 dark:text-gray-500 text-sm ml-auto">
+            = {amountInYuan}
           </span>
         </div>
 
@@ -126,8 +132,8 @@ export function ExpenseForm() {
                     ? handleNumpadInput("backspace")
                     : handleNumpadInput(key)
                 }
-                className="h-12 flex items-center justify-center text-lg font-medium bg-white rounded-lg
-                  active:bg-gray-200 transition-colors select-none"
+                className="h-12 flex items-center justify-center text-lg font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg
+                  active:bg-gray-200 dark:active:bg-gray-600 transition-colors select-none"
               >
                 {key}
               </button>
@@ -141,9 +147,9 @@ export function ExpenseForm() {
           inputMode="decimal"
           value={displayAmount}
           onChange={(e) => handleAmountChange(e.target.value)}
-          placeholder="输入金额"
+          placeholder={t('expense.amount')}
           className="hidden lg:block w-full mt-2 text-2xl bg-transparent border-none outline-none
-            placeholder:text-gray-300 text-gray-900 font-bold text-center"
+            placeholder:text-gray-300 dark:placeholder:text-gray-600 text-gray-900 dark:text-gray-100 font-bold text-center"
         />
       </div>
 
@@ -167,7 +173,7 @@ export function ExpenseForm() {
           hover:bg-primary-700 active:bg-primary-800 disabled:opacity-40
           disabled:cursor-not-allowed transition-colors text-base"
       >
-        {isSubmitting ? "记录中..." : amount ? `记录 ¥${amountInYuan}` : "记录消费"}
+        {isSubmitting ? t('expense.submitting') : amount ? `${t('expense.record')} ${formatAmount(Number(amount))}` : t('expense.submit')}
       </button>
     </div>
   );

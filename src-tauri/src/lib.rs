@@ -1,4 +1,5 @@
 mod commands;
+mod config;
 mod crypto;
 mod db;
 mod services;
@@ -21,6 +22,9 @@ pub fn run() {
             db: Mutex::new(conn),
         })
         .invoke_handler(tauri::generate_handler![
+            commands::config_cmd::get_db_path,
+            commands::config_cmd::set_db_path,
+            commands::config_cmd::reset_db_path,
             commands::expense_cmd::get_expenses,
             commands::expense_cmd::add_expense,
             commands::expense_cmd::update_expense,

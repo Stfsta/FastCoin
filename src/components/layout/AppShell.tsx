@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { MobileTabBar } from "./MobileTabBar";
 import { Toast } from "@/components/common/Toast";
@@ -39,8 +39,8 @@ function ResizeHandle({ onDrag, vertical = false }: { onDrag: (delta: number) =>
       onMouseDown={onMouseDown}
       className={
         vertical
-          ? "h-1.5 bg-gray-100 hover:bg-primary-300 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group"
-          : "w-1.5 bg-gray-100 hover:bg-primary-300 cursor-col-resize shrink-0 transition-colors flex items-center justify-center group"
+          ? "h-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-primary-300 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group"
+          : "w-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-primary-300 cursor-col-resize shrink-0 transition-colors flex items-center justify-center group"
       }
     >
       <div className={vertical ? "w-8 h-0.5 rounded bg-gray-300 group-hover:bg-primary-500" : "w-0.5 h-8 rounded bg-gray-300 group-hover:bg-primary-500"} />
@@ -76,7 +76,7 @@ export function AppShell() {
   const centerWidth = 1 - leftWidth - rightWidth;
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Desktop 3-column layout */}
       <div
         ref={containerRef}
@@ -84,7 +84,7 @@ export function AppShell() {
       >
         {/* Left: Expense Entry */}
         <aside
-          className="h-full overflow-hidden bg-white border-r border-gray-200"
+          className="h-full overflow-hidden bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-600"
           style={{ width: `${leftWidth * 100}%`, minWidth: `${0.12 * 100}%` }}
         >
           <ExpensePanel />
@@ -94,7 +94,7 @@ export function AppShell() {
 
         {/* Center: Stats & Charts */}
         <main
-          className="h-full overflow-y-auto scrollbar-thin bg-gray-50"
+          className="h-full overflow-y-auto scrollbar-thin bg-gray-50 dark:bg-gray-900"
           style={{ width: `${centerWidth * 100}%` }}
         >
           <StatsDashboard />
@@ -104,7 +104,7 @@ export function AppShell() {
 
         {/* Right: Settings */}
         <aside
-          className="h-full overflow-hidden bg-white border-l border-gray-200"
+          className="h-full overflow-hidden bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-600"
           style={{ width: `${rightWidth * 100}%`, minWidth: `${0.12 * 100}%` }}
         >
           <SettingsPanel />

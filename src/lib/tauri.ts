@@ -203,6 +203,20 @@ export async function getStats(periodId: string): Promise<StatsResponse> {
   return invoke("get_stats", { periodId });
 }
 
+// ─── Config / Data Path ──────────────────────────────
+
+export async function getDbPath(): Promise<string> {
+  return invoke("get_db_path");
+}
+
+export async function setDbPath(newPath: string): Promise<string> {
+  return invoke("set_db_path", { newPath });
+}
+
+export async function resetDbPath(): Promise<string> {
+  return invoke("reset_db_path");
+}
+
 // ─── Export / Import ─────────────────────────────────
 
 export async function exportData(

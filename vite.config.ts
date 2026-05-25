@@ -4,7 +4,7 @@ import path from "path";
 
 const host = process.env.TAURI_DEV_HOST;
 
-export default defineConfig(async () => ({
+export default defineConfig(() => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,6 +12,9 @@ export default defineConfig(async () => ({
     },
   },
   clearScreen: false,
+  optimizeDeps: {
+    exclude: ["@tauri-apps/api", "@tauri-apps/plugin-dialog", "@tauri-apps/plugin-fs"],
+  },
   server: {
     port: 1420,
     strictPort: true,
@@ -30,7 +33,7 @@ export default defineConfig(async () => ({
   envPrefix: ["VITE_", "TAURI_"],
   build: {
     target: process.env.TAURI_PLATFORM === "windows" ? "chrome105" : "safari13",
-    minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
+    minify: !process.env.TAURI_DEBUG ? ("esbuild" as const) : false,
     sourcemap: !!process.env.TAURI_DEBUG,
   },
 }));

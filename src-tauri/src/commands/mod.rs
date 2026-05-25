@@ -1,4 +1,5 @@
 pub mod category_cmd;
+pub mod config_cmd;
 pub mod expense_cmd;
 pub mod export_cmd;
 pub mod import_cmd;

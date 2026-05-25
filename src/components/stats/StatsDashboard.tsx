@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDate } from "date-fns";
 import * as api from "@/lib/tauri";
 import type { StatsResponse } from "@/lib/tauri";
@@ -6,8 +7,10 @@ import type { AccountingPeriod } from "@/types";
 import { SpendingTrendChart } from "@/components/charts/SpendingTrendChart";
 import { SourceDistribution } from "@/components/charts/SourceDistribution";
 import { useDataStore } from "@/stores/dataStore";
+import { formatAmount } from "@/utils/format";
 
 export function StatsDashboard() {
+  const { t } = useTranslation();
   const [periods, setPeriods] = useState<AccountingPeriod[]>([]);
   const [activePeriodId, setActivePeriodId] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsResponse | null>(null);
@@ -16,7 +19,7 @@ export function StatsDashboard() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     if (activePeriodId) {
@@ -57,6 +60,7 @@ export function StatsDashboard() {
     try {
       await api.setActivePeriod(id);
       setActivePeriodId(id);
+      useDataStore.getState().triggerRefresh();
     } catch (e) {
       console.error("Failed to set active period:", e);
     }
@@ -66,16 +70,15 @@ export function StatsDashboard() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">财务统计</h2>
-          <p className="text-xs text-gray-500">{today}</p>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('stats.title')}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{today}</p>
         </div>
         <select
           value={activePeriodId || ""}
           onChange={(e) => handleSetActive(e.target.value)}
-          className="px-3 py-1.5 text-sm bg-gray-100 border-0 rounded-lg
+          className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-0 rounded-lg
             focus:outline-none focus:ring-2 focus:ring-primary-500/20"
         >
           {periods.map((p) => (
@@ -89,38 +92,36 @@ export function StatsDashboard() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-24 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : stats ? (
         <>
-          {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard
-              label="周期总支出"
-              value={`¥${(stats.periodTotal / 100).toFixed(2)}`}
-              color="text-gray-900"
+              label={t('stats.periodTotal')}
+              value={formatAmount(stats.periodTotal)}
+              color="text-gray-900 dark:text-gray-100"
             />
             <StatCard
-              label="今日支出"
-              value={`¥${(stats.todayTotal / 100).toFixed(2)}`}
+              label={t('stats.todayTotal')}
+              value={formatAmount(stats.todayTotal)}
               color="text-primary-600"
             />
             <StatCard
-              label="日均消费"
-              value={`¥${(stats.dailyAverage / 100).toFixed(2)}`}
+              label={t('stats.dailyAvg')}
+              value={formatAmount(Math.round(stats.dailyAverage))}
               color="text-amber-600"
             />
             <StatCard
-              label="周期进度"
-              value={`${stats.daysElapsed}/${stats.daysTotal}天`}
+              label={t('stats.periodProgress')}
+              value={`${stats.daysElapsed}/${stats.daysTotal}${t('stats.days')}`}
               color="text-emerald-600"
             />
           </div>
 
-          {/* Per Source Breakdown */}
-          <div className="bg-white rounded-xl p-4 border border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">支付来源分布</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{t('stats.sourceDist')}</h3>
             <div className="space-y-2">
               {stats.perSource.map((s) => {
                 const pct = stats.periodTotal > 0
@@ -129,8 +130,8 @@ export function StatsDashboard() {
                 return (
                   <div key={s.sourceId} className="flex items-center gap-2">
                     <span>{s.sourceIcon}</span>
-                    <span className="text-sm text-gray-700 w-16 truncate">{s.sourceName}</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <span className="text-sm text-gray-700 dark:text-gray-200 w-16 truncate">{s.sourceName}</span>
+                    <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -139,25 +140,24 @@ export function StatsDashboard() {
                         }}
                       />
                     </div>
-                    <span className="text-sm text-gray-500 w-20 text-right">
-                      ¥{(s.total / 100).toFixed(2)}
+                    <span className="text-sm text-gray-500 dark:text-gray-400 w-20 text-right">
+                      {formatAmount(s.total)}
                     </span>
-                    <span className="text-xs text-gray-400 w-10 text-right">{pct}%</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 w-10 text-right">{pct}%</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Charts */}
           <SpendingTrendChart dailySeries={stats.dailySeries} />
           <SourceDistribution perSource={stats.perSource} />
         </>
       ) : (
         <div className="p-8 text-center">
           <div className="text-4xl mb-3">📊</div>
-          <p className="text-gray-500 text-sm">暂无统计数据</p>
-          <p className="text-gray-400 text-xs mt-1">添加消费记录后查看统计</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('stats.noData')}</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('stats.noDataHint')}</p>
         </div>
       )}
     </div>
@@ -166,8 +166,8 @@ export function StatsDashboard() {
 
 function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="bg-white rounded-xl p-3 border border-gray-100">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className={`text-lg font-bold ${color}`}>{value}</p>
     </div>
   );

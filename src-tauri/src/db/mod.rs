@@ -2,39 +2,12 @@ pub mod models;
 pub mod seed;
 
 use rusqlite::Connection;
-use std::path::PathBuf;
-
-fn get_db_path() -> PathBuf {
-    let mut path = dirs_db_path();
-    std::fs::create_dir_all(&path).ok();
-    path.push("fastcoin.db");
-    path
-}
-
-fn dirs_db_path() -> PathBuf {
-    #[cfg(target_os = "windows")]
-    {
-        let local_app_data =
-            std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(local_app_data).join("FastCoin")
-    }
-    #[cfg(target_os = "macos")]
-    {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(home)
-            .join("Library")
-            .join("Application Support")
-            .join("FastCoin")
-    }
-    #[cfg(target_os = "linux")]
-    {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(home).join(".local").join("share").join("FastCoin")
-    }
-}
 
 pub fn init_db() -> Result<Connection, Box<dyn std::error::Error>> {
-    let db_path = get_db_path();
+    let db_path = crate::config::effective_db_path();
+    if let Some(parent) = db_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     let conn = Connection::open(&db_path)?;
 
     conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
@@ -124,7 +97,6 @@ pub fn init_db() -> Result<Connection, Box<dyn std::error::Error>> {
         ",
     )?;
 
-    // Check if seed is needed
     let count: i64 =
         conn.query_row("SELECT COUNT(*) FROM payment_sources", [], |row| row.get(0))?;
     if count == 0 {

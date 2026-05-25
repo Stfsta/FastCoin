@@ -29,6 +29,7 @@ pub fn get_settings(state: State<AppState>) -> Result<AppSettings, String> {
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateSettingsArgs {
     pub default_currency: Option<String>,
     pub default_source_id: Option<Option<String>>,
