@@ -11,6 +11,7 @@
 | Node.js | >= 18 |
 | Rust | >= 1.70 (MSVC 工具链) |
 | Visual Studio Build Tools | 含 "C++ 桌面开发" 工作负载 |
+| NSIS (v3.x) | Windows 构建安装包必需 (winget: `NSIS.NSIS`) |
 
 ### 开发运行（调试模式）
 
@@ -18,7 +19,12 @@
 # 1. 安装前端依赖
 npm install
 
-# 2. 启动开发模式
+# 2. 确保 NSIS 在 PATH 中（否则构建时跳过安装包生成）：
+#    方法一（推荐）：安装时勾选 "Add to PATH"
+#    方法二：手动添加 C:\Program Files (x86)\NSIS 到系统环境变量
+makensis -VERSION  # 验证：应输出 v3.x
+
+# 3. 启动开发模式
 npx tauri dev
 ```
 
@@ -31,8 +37,9 @@ npx tauri build
 ```
 
 构建产物：
-- `src-tauri/target/release/fastcoin.exe` — 可直接运行
-- `src-tauri/target/release/bundle/msi/` — `.msi` Windows 安装包
+- `src-tauri/target/release/fastcoin.exe` — 可直接运行的便携版
+- `src-tauri/target/release/bundle/nsis/FastCoin_0.1.0_x64-setup.exe` — NSIS 安装包（推荐分发）
+- `src-tauri/target/release/bundle/msi/FastCoin_0.1.0_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
 
 ### 数据存储位置
 
@@ -163,7 +170,7 @@ React (UI)  ←→  Tauri IPC  ←→  Rust Backend
 
 - 金额以**整数分（cents）**存储，杜绝浮点精度误差
 - 每条记录带 `version` 字段，支持增量同步冲突解决
-- 加密密钥通过 PBKDF2 (210,000 次迭代) 从密码派生
+- 加密密钥通过 PBKDF2 (600,000 次迭代) 从密码派生
 
 ## 项目结构
 
