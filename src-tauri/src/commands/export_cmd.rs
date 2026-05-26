@@ -9,11 +9,14 @@ pub fn export_data(
     mode: String,
     format: String,
     file_path: String,
+    date: Option<String>,
 ) -> Result<(), String> {
     let conn = state.db.lock().map_err(|e| e.to_string())?;
 
     match format.as_str() {
-        "fastcoin" => export_service::export_to_fastcoin(&conn, &password, &mode, &file_path)
+        "fastcoin" => export_service::export_to_fastcoin(
+            &conn, &password, &mode, &file_path, date.as_deref(),
+        )
             .map_err(|e| e.to_string()),
         "xlsx" => export_service::export_to_xlsx(&conn, &file_path).map_err(|e| e.to_string()),
         "csv" => export_service::export_to_csv(&conn, &file_path).map_err(|e| e.to_string()),

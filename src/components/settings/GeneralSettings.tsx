@@ -115,7 +115,9 @@ export function GeneralSettings() {
       {settings && (
         <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
           <p className="text-xs text-gray-400 dark:text-gray-500">{t('settings.deviceId')}: {settings.deviceId.slice(0, 8)}...</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">{t('settings.dataVersion')}: {settings.dataVersion}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            {t('settings.lastImportedVersion')}: {settings.lastImportedVersion > 0 ? settings.lastImportedVersion : t('settings.noImport')}
+          </p>
         </div>
       )}
     </div>

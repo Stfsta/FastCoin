@@ -39,16 +39,19 @@ async function showSaveDialog(defaultName: string, ext: string): Promise<string 
   return prompt(`Save path (${defaultName}):`, defaultName);
 }
 
+type ExportMode = "full" | "date" | "period";
+
 export function ExportControls() {
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [mode, setMode] = useState<"full" | "incremental">("full");
+  const [mode, setMode] = useState<ExportMode>("full");
   const [format, setFormat] = useState<"fastcoin" | "xlsx" | "csv">("fastcoin");
   const [isExporting, setIsExporting] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [manualPath, setManualPath] = useState("");
   const addToast = useUIStore((s) => s.addToast);
+  const selectedDate = useUIStore((s) => s.selectedDate);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
   const pwMismatch = confirmPassword && password !== confirmPassword;
@@ -64,19 +67,27 @@ export function ExportControls() {
     try {
       const ts = new Date().toISOString().slice(0, 19).replace(/[:-]/g, "");
       const ext = format === "fastcoin" ? "fastcoin" : format === "xlsx" ? "xlsx" : "csv";
-      const defaultName = `FastCoin_${mode}_${ts}.${ext}`;
+      const defaultName = mode === "date"
+        ? `FastCoin_date_${selectedDate}_${ts}.${ext}`
+        : `FastCoin_${mode}_${ts}.${ext}`;
 
       let filePath = await showSaveDialog(defaultName, ext);
       if (!filePath && manualPath) filePath = manualPath;
       if (!filePath) { setIsExporting(false); return; }
 
-      await api.exportData(password, mode, format, filePath);
+      await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);
       addToast(t('settings.exportSuccess'), "success");
       setPassword(""); setConfirmPassword("");
     } catch (e) {
       addToast(t('settings.exportFail', { error: String(e) }), "error");
     } finally { setIsExporting(false); }
   };
+
+  const modeButtons: { key: ExportMode; label: string }[] = [
+    { key: "full", label: t('settings.fullExport') },
+    { key: "date", label: t('settings.dateExport') },
+    { key: "period", label: t('settings.periodExport') },
+  ];
 
   return (
     <div className="space-y-3">
@@ -100,15 +111,18 @@ export function ExportControls() {
         <div>
           <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('settings.mode')}</label>
           <div className="flex gap-2">
-            <button onClick={() => setMode("full")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-all ${mode === "full" ? "bg-primary-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
-              {t('settings.fullExport')}
-            </button>
-            <button onClick={() => setMode("incremental")}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-all ${mode === "incremental" ? "bg-primary-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
-              {t('settings.incremental')}
-            </button>
+            {modeButtons.map(({ key, label }) => (
+              <button key={key} onClick={() => setMode(key)}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-all ${mode === key ? "bg-primary-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
+                {label}
+              </button>
+            ))}
           </div>
+          {mode === "date" && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              {t('settings.dateExportHint', { date: selectedDate })}
+            </p>
+          )}
         </div>
       )}
 

@@ -84,7 +84,8 @@ pub fn init_db() -> Result<Connection, Box<dyn std::error::Error>> {
             key_salt               TEXT,
             device_id              TEXT NOT NULL,
             data_version           INTEGER NOT NULL DEFAULT 0,
-            last_exported_version  INTEGER NOT NULL DEFAULT 0
+            last_exported_version  INTEGER NOT NULL DEFAULT 0,
+            last_imported_version  INTEGER NOT NULL DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS deletion_log (
@@ -96,6 +97,11 @@ pub fn init_db() -> Result<Connection, Box<dyn std::error::Error>> {
         );
         ",
     )?;
+
+    // Migrate: add last_imported_version column if missing
+    conn.execute_batch(
+        "ALTER TABLE app_settings ADD COLUMN last_imported_version INTEGER NOT NULL DEFAULT 0;"
+    ).ok();
 
     let count: i64 =
         conn.query_row("SELECT COUNT(*) FROM payment_sources", [], |row| row.get(0))?;

@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { invoke } from "@tauri-apps/api/core";
 import * as api from "@/lib/tauri";
 import type { ImportDiff, MergeStrategy } from "@/types";
+import type { ThemeMode } from "@/types";
 import { useUIStore } from "@/stores/uiStore";
+import { useDataStore } from "@/stores/dataStore";
+import { useExpenseStore } from "@/stores/expenseStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { applyTheme } from "@/utils/theme";
 import { Button } from "@/components/common/Button";
 
 async function showOpenDialog(): Promise<string | null> {
@@ -66,6 +72,15 @@ export function ImportControls() {
     setIsImporting(true);
     try {
       await api.importConfirm(fp, password, strategy);
+      // Refresh all data immediately after import
+      useDataStore.getState().triggerRefresh();
+      useExpenseStore.getState().fetchExpenses();
+      await useSettingsStore.getState().load();
+      const newSettings = useSettingsStore.getState().settings;
+      if (newSettings) {
+        if (newSettings.locale !== i18n.language) i18n.changeLanguage(newSettings.locale);
+        applyTheme(newSettings.theme as ThemeMode);
+      }
       addToast(t('settings.importSuccess'), "success");
       setDiff(null); setFilePath(""); setManualPath(""); setPassword("");
     } catch (e) { addToast(t('settings.importFail', { error: String(e) }), "error"); }

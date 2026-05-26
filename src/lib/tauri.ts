@@ -224,8 +224,9 @@ export async function exportData(
   mode: string,
   format: string,
   filePath: string,
+  date?: string,
 ): Promise<void> {
-  return invoke("export_data", { password, mode, format, filePath });
+  return invoke("export_data", { password, mode, format, filePath, date: date ?? null });
 }
 
 export async function importPreview(

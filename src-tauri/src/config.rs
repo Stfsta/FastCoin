@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-fn config_dir() -> PathBuf {
+pub fn default_app_data_dir() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
         let local = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
@@ -19,8 +19,54 @@ fn config_dir() -> PathBuf {
     }
 }
 
-fn config_path() -> PathBuf {
-    config_dir().join("config.json")
+fn pointer_path() -> PathBuf {
+    default_app_data_dir().join("path.cfg")
+}
+
+pub fn load_pointer() -> Option<String> {
+    let path = pointer_path();
+    if path.exists() {
+        let content = std::fs::read_to_string(&path).ok()?;
+        let dir = content.trim().to_string();
+        if !dir.is_empty() && std::path::Path::new(&dir).exists() {
+            Some(dir)
+        } else {
+            // Pointer points to non-existent directory, clean up
+            std::fs::remove_file(&path).ok();
+            None
+        }
+    } else {
+        None
+    }
+}
+
+pub fn save_pointer(data_dir: &str) -> Result<(), String> {
+    let dir = default_app_data_dir();
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    std::fs::write(pointer_path(), data_dir).map_err(|e| e.to_string())
+}
+
+pub fn remove_pointer() -> Result<(), String> {
+    let path = pointer_path();
+    if path.exists() {
+        std::fs::remove_file(&path).map_err(|e| e.to_string())
+    } else {
+        Ok(())
+    }
+}
+
+/// Returns the directory where the database and config.json are stored.
+/// Priority: path.cfg pointer > default app data dir
+pub fn effective_data_dir() -> PathBuf {
+    if let Some(custom_dir) = load_pointer() {
+        PathBuf::from(custom_dir)
+    } else {
+        default_app_data_dir()
+    }
+}
+
+fn config_file_path() -> PathBuf {
+    effective_data_dir().join("config.json")
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,7 +82,7 @@ impl Default for AppConfig {
 }
 
 pub fn load_config() -> AppConfig {
-    let path = config_path();
+    let path = config_file_path();
     if path.exists() {
         std::fs::read_to_string(&path)
             .ok()
@@ -48,20 +94,16 @@ pub fn load_config() -> AppConfig {
 }
 
 pub fn save_config(config: &AppConfig) -> Result<(), String> {
-    let dir = config_dir();
+    let dir = effective_data_dir();
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let json = serde_json::to_string_pretty(config).map_err(|e| e.to_string())?;
-    std::fs::write(config_path(), json).map_err(|e| e.to_string())
-}
-
-pub fn default_db_path() -> PathBuf {
-    config_dir().join("fastcoin.db")
+    std::fs::write(config_file_path(), json).map_err(|e| e.to_string())
 }
 
 pub fn effective_db_path() -> PathBuf {
     let config = load_config();
     match config.db_path {
         Some(ref custom) if !custom.is_empty() => PathBuf::from(custom),
-        _ => default_db_path(),
+        _ => effective_data_dir().join("fastcoin.db"),
     }
 }

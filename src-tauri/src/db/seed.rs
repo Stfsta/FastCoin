@@ -81,8 +81,8 @@ pub fn seed_defaults(conn: &Connection) -> Result<(), rusqlite::Error> {
 
     // Default settings
     conn.execute(
-        "INSERT INTO app_settings (id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version)
-         VALUES ('singleton', 'CNY', NULL, ?1, 'system', 'zh-CN', NULL, ?2, 0, 0)",
+        "INSERT INTO app_settings (id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version, last_imported_version)
+         VALUES ('singleton', 'CNY', NULL, ?1, 'system', 'zh-CN', NULL, ?2, 0, 0, 0)",
         rusqlite::params![period_id, device_id],
     )?;
 

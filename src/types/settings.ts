@@ -12,4 +12,5 @@ export interface AppSettings {
   deviceId: string;
   dataVersion: number;
   lastExportedVersion: number;
+  lastImportedVersion: number;
 }

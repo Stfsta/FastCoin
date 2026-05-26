@@ -11,10 +11,13 @@ use crate::{
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExportPayload {
     pub expenses: Vec<Expense>,
+    #[serde(alias = "payment_sources")]
     pub payment_sources: Vec<PaymentSource>,
     pub categories: Vec<Category>,
+    #[serde(alias = "accounting_periods")]
     pub accounting_periods: Vec<AccountingPeriod>,
     pub settings: AppSettings,
 }
@@ -107,7 +110,7 @@ fn gather_full_export(conn: &Connection) -> AppResult<ExportPayload> {
         .collect();
 
     let settings: AppSettings = conn.query_row(
-        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version
+        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version, last_imported_version
          FROM app_settings WHERE id='singleton'",
         [],
         |row| {
@@ -122,6 +125,7 @@ fn gather_full_export(conn: &Connection) -> AppResult<ExportPayload> {
                 device_id: row.get(7)?,
                 data_version: row.get(8)?,
                 last_exported_version: row.get(9)?,
+                last_imported_version: row.get(10)?,
             })
         },
     )?;
@@ -135,13 +139,33 @@ fn gather_full_export(conn: &Connection) -> AppResult<ExportPayload> {
     })
 }
 
-fn gather_incremental_export(conn: &Connection, since_version: i64) -> AppResult<ExportPayload> {
-    let mut full = gather_full_export(conn)?;
-    full.expenses.retain(|e| e.version > since_version);
-    full.payment_sources.retain(|s| s.version > since_version);
-    full.categories.retain(|c| c.version > since_version);
-    full.accounting_periods.retain(|p| p.version > since_version);
-    Ok(full)
+fn gather_date_export(conn: &Connection, date: &str) -> AppResult<ExportPayload> {
+    let mut payload = gather_full_export(conn)?;
+    payload.expenses.retain(|e| e.date == date);
+    Ok(payload)
+}
+
+fn gather_period_export(conn: &Connection) -> AppResult<ExportPayload> {
+    let mut payload = gather_full_export(conn)?;
+    let period: AccountingPeriod = conn.query_row(
+        "SELECT id, name, start_date, end_date, is_active, created_at, updated_at, version
+         FROM accounting_periods WHERE is_active=1",
+        [],
+        |row| {
+            Ok(AccountingPeriod {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                start_date: row.get(2)?,
+                end_date: row.get(3)?,
+                is_active: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+                version: row.get(7)?,
+            })
+        },
+    ).map_err(|_| AppError::Validation("没有活跃的记账周期".to_string()))?;
+    payload.expenses.retain(|e| e.date >= period.start_date && e.date <= period.end_date);
+    Ok(payload)
 }
 
 pub fn export_to_fastcoin(
@@ -149,9 +173,10 @@ pub fn export_to_fastcoin(
     password: &str,
     mode: &str,
     file_path: &str,
+    date: Option<&str>,
 ) -> AppResult<()> {
     let settings: AppSettings = conn.query_row(
-        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version
+        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version, last_imported_version
          FROM app_settings WHERE id='singleton'",
         [],
         |row| {
@@ -166,14 +191,18 @@ pub fn export_to_fastcoin(
                 device_id: row.get(7)?,
                 data_version: row.get(8)?,
                 last_exported_version: row.get(9)?,
+                last_imported_version: row.get(10)?,
             })
         },
     )?;
 
-    let payload = if mode == "incremental" {
-        gather_incremental_export(conn, settings.last_exported_version)?
-    } else {
-        gather_full_export(conn)?
+    let payload = match mode {
+        "date" => {
+            let d = date.ok_or_else(|| AppError::Validation("当日导出需要指定日期".to_string()))?;
+            gather_date_export(conn, d)?
+        }
+        "period" => gather_period_export(conn)?,
+        _ => gather_full_export(conn)?,
     };
 
     let record_count = payload.expenses.len() as u32;
@@ -196,16 +225,13 @@ pub fn export_to_fastcoin(
     let output = serde_json::to_string_pretty(&encrypted)?;
     std::fs::write(file_path, output)?;
 
-    // Update last exported version
-    let new_exported = if mode == "incremental" {
-        max_version
-    } else {
-        settings.data_version
-    };
-    conn.execute(
-        "UPDATE app_settings SET last_exported_version=?1 WHERE id='singleton'",
-        params![new_exported],
-    )?;
+    // Only update last_exported_version for full export
+    if mode == "full" {
+        conn.execute(
+            "UPDATE app_settings SET last_exported_version=?1 WHERE id='singleton'",
+            params![settings.data_version],
+        )?;
+    }
 
     Ok(())
 }

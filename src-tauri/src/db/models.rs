@@ -72,6 +72,7 @@ pub struct AppSettings {
     pub device_id: String,
     pub data_version: i64,
     pub last_exported_version: i64,
+    pub last_imported_version: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -19,12 +19,13 @@ export function CategoryManager() {
   const [showAdd, setShowAdd] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const addToast = useUIStore((s) => s.addToast);
+  const refreshKey = useDataStore((s) => s.refreshKey);
 
   const [formName, setFormName] = useState("");
   const [formIcon, setFormIcon] = useState("📌");
   const [formColor, setFormColor] = useState("#3B82F6");
 
-  useEffect(() => { loadCategories(); }, []);
+  useEffect(() => { loadCategories(); }, [refreshKey]);
 
   const loadCategories = async () => {
     try {

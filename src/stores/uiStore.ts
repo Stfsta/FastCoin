@@ -16,6 +16,8 @@ interface UIState {
   rightWidth: number;
   // Left panel vertical split: form takes this fraction, list takes remainder
   leftFormFraction: number;
+  // Date selected in the expense form (yyyy-MM-dd)
+  selectedDate: string;
 
   setActiveMobilePanel: (panel: MobilePanel) => void;
   addToast: (message: string, type?: Toast["type"]) => void;
@@ -23,6 +25,7 @@ interface UIState {
   setLeftWidth: (w: number) => void;
   setRightWidth: (w: number) => void;
   setLeftFormFraction: (f: number) => void;
+  setSelectedDate: (date: string) => void;
 }
 
 const MIN_PANEL = 0.12;
@@ -34,6 +37,7 @@ export const useUIStore = create<UIState>((set) => ({
   leftWidth: 0.22,
   rightWidth: 0.25,
   leftFormFraction: 0.5,
+  selectedDate: new Date().toISOString().slice(0, 10),
 
   setActiveMobilePanel: (panel) => set({ activeMobilePanel: panel }),
 
@@ -51,4 +55,5 @@ export const useUIStore = create<UIState>((set) => ({
   setLeftWidth: (w) => set({ leftWidth: Math.min(MAX_PANEL, Math.max(MIN_PANEL, w)) }),
   setRightWidth: (w) => set({ rightWidth: Math.min(MAX_PANEL, Math.max(MIN_PANEL, w)) }),
   setLeftFormFraction: (f) => set({ leftFormFraction: Math.min(0.85, Math.max(0.2, f)) }),
+  setSelectedDate: (date) => set({ selectedDate: date }),
 }));

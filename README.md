@@ -38,8 +38,8 @@ npx tauri build
 
 构建产物：
 - `src-tauri/target/release/fastcoin.exe` — 可直接运行的便携版
-- `src-tauri/target/release/bundle/nsis/FastCoin_0.1.0_x64-setup.exe` — NSIS 安装包（推荐分发）
-- `src-tauri/target/release/bundle/msi/FastCoin_0.1.0_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
+- `src-tauri/target/release/bundle/nsis/FastCoin_0.2.0_x64-setup.exe` — NSIS 安装包（推荐分发）
+- `src-tauri/target/release/bundle/msi/FastCoin_0.2.0_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
 
 ### 数据存储位置
 
@@ -137,7 +137,8 @@ npx tauri build
 2. 选择「加密备份」格式
 3. 选择模式：
    - **完整导出**：导出所有数据，用于初始化另一台设备
-   - **增量更新**：仅导出上次同步后的变更，带版本编号
+   - **当日导出**：仅导出记账栏所选日期的消费数据
+   - **当前周期导出**：仅导出当前活跃记账周期的消费数据
 4. 设置密码 → 点击导出
 5. 文件通过任意方式传输到另一台设备
 

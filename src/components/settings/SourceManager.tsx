@@ -18,6 +18,7 @@ export function SourceManager() {
   const [editingSource, setEditingSource] = useState<PaymentSource | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const addToast = useUIStore((s) => s.addToast);
+  const refreshKey = useDataStore((s) => s.refreshKey);
 
   const [formName, setFormName] = useState("");
   const [formType, setFormType] = useState("other");
@@ -26,7 +27,7 @@ export function SourceManager() {
 
   useEffect(() => {
     loadSources();
-  }, []);
+  }, [refreshKey]);
 
   const loadSources = async () => {
     try {

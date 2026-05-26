@@ -18,8 +18,15 @@ export function ExpenseForm() {
   const [sourceId, setSourceId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [date, setDate] = useState(formatDate(new Date(), "yyyy-MM-dd"));
+  const selectedDate = useUIStore((s) => s.selectedDate);
+  const setSelectedDate = useUIStore((s) => s.setSelectedDate);
+  const [date, setDate] = useState(selectedDate);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleDateChange = useCallback((d: string) => {
+    setDate(d);
+    setSelectedDate(d);
+  }, [setSelectedDate]);
 
   const addExpense = useExpenseStore((s) => s.addExpense);
   const addToast = useUIStore((s) => s.addToast);
@@ -83,7 +90,9 @@ export function ExpenseForm() {
       setDisplayAmount("");
       setCategoryId(null);
       setNote("");
-      setDate(formatDate(new Date(), "yyyy-MM-dd"));
+      const today = formatDate(new Date(), "yyyy-MM-dd");
+      setDate(today);
+      setSelectedDate(today);
     } catch (e) {
       addToast(t('expense.fail', { error: String(e) }), "error");
     } finally {
@@ -163,7 +172,7 @@ export function ExpenseForm() {
       <NoteInput value={note} onChange={setNote} />
 
       {/* Date Quick Select */}
-      <DateQuickSelect value={date} onChange={setDate} />
+      <DateQuickSelect value={date} onChange={handleDateChange} />
 
       {/* Submit Button */}
       <button

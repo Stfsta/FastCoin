@@ -7,7 +7,7 @@ use crate::{db::models::AppSettings, utils::format::now_ms, AppState};
 pub fn get_settings(state: State<AppState>) -> Result<AppSettings, String> {
     let conn = state.db.lock().map_err(|e| e.to_string())?;
     conn.query_row(
-        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version
+        "SELECT id, default_currency, default_source_id, active_period_id, theme, locale, key_salt, device_id, data_version, last_exported_version, last_imported_version
          FROM app_settings WHERE id='singleton'",
         [],
         |row| {
@@ -22,6 +22,7 @@ pub fn get_settings(state: State<AppState>) -> Result<AppSettings, String> {
                 device_id: row.get(7)?,
                 data_version: row.get(8)?,
                 last_exported_version: row.get(9)?,
+                last_imported_version: row.get(10)?,
             })
         },
     )

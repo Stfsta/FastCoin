@@ -37,6 +37,7 @@ pub fn import_confirm(
     let encrypted: EncryptedFile =
         serde_json::from_str(&file_content).map_err(|e| format!("文件格式无效: {}", e))?;
 
-    import_service::apply_import(&conn, &encrypted, &password, &strategy)
+    let until_version = encrypted.metadata.until_version;
+    import_service::apply_import(&conn, &encrypted, &password, &strategy, until_version)
         .map_err(|e| format!("导入失败: {}", e))
 }

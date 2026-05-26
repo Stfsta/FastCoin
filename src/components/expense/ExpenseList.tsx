@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useDataStore } from "@/stores/dataStore";
 import { ExpenseRow } from "./ExpenseRow";
 import { formatAmount } from "@/utils/format";
 import { formatDate } from "date-fns";
@@ -11,6 +12,7 @@ export function ExpenseList() {
   const expenses = useExpenseStore((s) => s.expenses);
   const isLoading = useExpenseStore((s) => s.isLoading);
   const fetchExpenses = useExpenseStore((s) => s.fetchExpenses);
+  const refreshKey = useDataStore((s) => s.refreshKey);
   void useSettingsStore((s) => s.settings?.defaultCurrency); // reactive subscription for currency changes
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export function ExpenseList() {
       "yyyy-MM-dd",
     );
     fetchExpenses(sevenDaysAgo, today);
-  }, [fetchExpenses]);
+  }, [fetchExpenses, refreshKey]);
 
   // Group expenses by date
   const grouped = expenses.reduce<Record<string, typeof expenses>>(

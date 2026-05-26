@@ -1,6 +1,6 @@
 import type { Expense, PaymentSource, Category, AccountingPeriod, AppSettings } from "./index";
 
-export type ExportMode = "full" | "incremental";
+export type ExportMode = "full" | "date" | "period";
 export type ExportFormat = "fastcoin" | "xlsx" | "csv";
 
 export interface ExportMetadata {
