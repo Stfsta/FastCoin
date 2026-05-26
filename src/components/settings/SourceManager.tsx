@@ -147,7 +147,7 @@ export function SourceManager() {
               </div>
               <button
                 onClick={() => openEdit(src)}
-                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-primary-600"
+                className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary-600"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -156,7 +156,7 @@ export function SourceManager() {
               </button>
               <button
                 onClick={() => handleDelete(src.id)}
-                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500"
+                className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-500"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -212,7 +212,7 @@ export function SourceManager() {
                 <button
                   key={c}
                   onClick={() => setFormColor(c)}
-                  className={`w-7 h-7 rounded-full transition-transform ${
+                  className={`w-9 h-9 rounded-full min-w-[36px] min-h-[36px] transition-transform ${
                     formColor === c ? "ring-2 ring-offset-2 ring-primary-500 scale-110" : ""
                   }`}
                   style={{ backgroundColor: c }}

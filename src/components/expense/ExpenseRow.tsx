@@ -63,7 +63,7 @@ export function ExpenseRow({ expense }: ExpenseRowProps) {
 
       <button
         onClick={handleDelete}
-        className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30
+        className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30
           transition-colors shrink-0"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

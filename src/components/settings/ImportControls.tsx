@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { invoke } from "@tauri-apps/api/core";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 import * as api from "@/lib/tauri";
+import { isAndroid } from "@/lib/platform";
 import type { ImportDiff, MergeStrategy } from "@/types";
 import type { ThemeMode } from "@/types";
 import { useUIStore } from "@/stores/uiStore";
@@ -42,6 +44,7 @@ export function ImportControls() {
   const [diff, setDiff] = useState<ImportDiff | null>(null);
   const [filePath, setFilePath] = useState("");
   const [manualPath, setManualPath] = useState("");
+  const [fileContent, setFileContent] = useState<string | null>(null);
   const addToast = useUIStore((s) => s.addToast);
 
   const handleSelectFile = async () => {
@@ -50,6 +53,18 @@ export function ImportControls() {
     if (path) {
       setFilePath(path);
       setDiff(null);
+      // On Android, read file content immediately via plugin-fs
+      if (isAndroid()) {
+        try {
+          const content = await readTextFile(path);
+          setFileContent(content);
+        } catch (e) {
+          addToast(t('settings.previewFail', { error: String(e) }), "error");
+          setFileContent(null);
+        }
+      } else {
+        setFileContent(null);
+      }
     }
   };
 
@@ -59,7 +74,11 @@ export function ImportControls() {
     if (fp !== filePath) setFilePath(fp);
     setIsImporting(true);
     try {
-      setDiff(await api.importPreview(fp, password));
+      if (isAndroid() && fileContent !== null) {
+        setDiff(await api.importPreviewFromContent(fileContent, password));
+      } else {
+        setDiff(await api.importPreview(fp, password));
+      }
     } catch (e) {
       addToast(t('settings.previewFail', { error: String(e) }), "error");
       setDiff(null);
@@ -71,7 +90,11 @@ export function ImportControls() {
     if (!fp || !password) return;
     setIsImporting(true);
     try {
-      await api.importConfirm(fp, password, strategy);
+      if (isAndroid() && fileContent !== null) {
+        await api.importConfirmFromContent(fileContent, password, strategy);
+      } else {
+        await api.importConfirm(fp, password, strategy);
+      }
       // Refresh all data immediately after import
       useDataStore.getState().triggerRefresh();
       useExpenseStore.getState().fetchExpenses();
@@ -82,7 +105,7 @@ export function ImportControls() {
         applyTheme(newSettings.theme as ThemeMode);
       }
       addToast(t('settings.importSuccess'), "success");
-      setDiff(null); setFilePath(""); setManualPath(""); setPassword("");
+      setDiff(null); setFilePath(""); setManualPath(""); setPassword(""); setFileContent(null);
     } catch (e) { addToast(t('settings.importFail', { error: String(e) }), "error"); }
     finally { setIsImporting(false); }
   };
@@ -97,12 +120,14 @@ export function ImportControls() {
         </Button>
       </div>
 
-      <div>
-        <input type="text" value={manualPath}
-          onChange={(e) => setManualPath(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
-          placeholder={t('settings.manualPath')} />
-      </div>
+      {!isAndroid() && (
+        <div>
+          <input type="text" value={manualPath}
+            onChange={(e) => setManualPath(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
+            placeholder={t('settings.manualPath')} />
+        </div>
+      )}
 
       <div className="relative">
         <input type={showPw ? "text" : "password"} value={password}

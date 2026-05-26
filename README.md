@@ -41,6 +41,55 @@ npx tauri build
 - `src-tauri/target/release/bundle/nsis/FastCoin_0.2.0_x64-setup.exe` — NSIS 安装包（推荐分发）
 - `src-tauri/target/release/bundle/msi/FastCoin_0.2.0_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
 
+### 构建 Android APK
+
+#### 前置条件
+
+| 工具 | 版本要求 | 安装方式 |
+|------|---------|---------|
+| Android SDK | API 34+ | 命令行工具或 Android Studio |
+| Android NDK | r27+ | 通过 sdkmanager 安装 |
+| JDK | 17+ | `winget install Microsoft.OpenJDK.17` |
+| Rust Android targets | aarch64, armv7, x86_64 | `rustup target add` |
+| Windows 开发者模式 | 必须开启 | 设置 → 开发者选项 |
+
+#### 一次性设置
+
+```bash
+# 1. 安装 Android SDK 命令行工具（如果没有 Android Studio）
+# 下载：https://developer.android.com/studio#command-line-tools-only
+# 解压到 %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest\
+
+# 2. 安装 SDK 组件
+sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools" "ndk;27.0.12077973"
+
+# 3. 设置环境变量
+set ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk
+set NDK_HOME=%ANDROID_HOME%\ndk\27.0.12077973
+set JAVA_HOME=C:\Program Files\Microsoft\jdk-17.0.19.10-hotspot  # 根据实际安装路径调整
+
+# 4. 添加 Rust Android 编译目标
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+
+# 5. 初始化 Android 项目（仅首次）
+npx tauri android init
+
+# 6. 开启 Windows 开发者模式（设置 → 开发者选项），用于符号链接
+```
+
+#### 构建与运行
+
+```bash
+# 开发调试（连接 Android 设备或模拟器）
+npx tauri android dev
+
+# 构建 APK
+npx tauri android build
+```
+
+构建产物：
+- `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk`
+
 ### 数据存储位置
 
 | 系统 | 路径 |
@@ -53,9 +102,7 @@ npx tauri build
 
 ### 手机端支持
 
-前端界面已通过 TailwindCSS 响应式断点适配手机宽度（< 1024px 时自动切换为底部 Tab 导航）。目前通过 Tauri 运行的是**桌面端**。如需手机端使用，可以：
-1. 在手机浏览器中打开 `http://<电脑IP>:1420`（开发模式下）
-2. 后续可构建 Tauri Mobile（Android/iOS，实验性支持）
+Android APK 已支持原生运行。前端界面通过 TailwindCSS 响应式断点适配手机宽度（< 1024px 时自动切换为底部 Tab 导航、底部弹窗、放大触摸目标等）。桌面端和手机端功能完全一致。
 
 ---
 

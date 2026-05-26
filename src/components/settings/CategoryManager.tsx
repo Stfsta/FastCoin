@@ -100,12 +100,12 @@ export function CategoryManager() {
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{cat.name}</p>
               </div>
-              <button onClick={() => openEdit(cat)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-primary-600">
+              <button onClick={() => openEdit(cat)} className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary-600">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
-              <button onClick={() => handleDelete(cat.id)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500">
+              <button onClick={() => handleDelete(cat.id)} className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-500">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -131,7 +131,7 @@ export function CategoryManager() {
             <div className="flex gap-2 flex-wrap">
               {PRESET_COLORS.map((c) => (
                 <button key={c} onClick={() => setFormColor(c)}
-                  className={`w-7 h-7 rounded-full transition-transform ${formColor === c ? "ring-2 ring-offset-2 ring-primary-500 scale-110" : ""}`}
+                  className={`w-9 h-9 rounded-full min-w-[36px] min-h-[36px] transition-transform ${formColor === c ? "ring-2 ring-offset-2 ring-primary-500 scale-110" : ""}`}
                   style={{ backgroundColor: c }} />
               ))}
             </div>

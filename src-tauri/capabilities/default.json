@@ -1,7 +1,7 @@
 {
   "identifier": "default",
   "description": "Default capabilities for FastCoin",
-  "windows": ["main"],
+  "windows": ["main", "*"],
   "permissions": [
     "core:default",
     "dialog:default",

@@ -7,6 +7,7 @@ pub fn get_db_path() -> Result<String, String> {
 }
 
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 pub fn set_db_path(state: tauri::State<crate::AppState>, new_path: String) -> Result<String, String> {
     // If reverting to default
     if new_path.is_empty() {
@@ -82,6 +83,7 @@ pub fn set_db_path(state: tauri::State<crate::AppState>, new_path: String) -> Re
 }
 
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 pub fn reset_db_path(state: tauri::State<crate::AppState>) -> Result<String, String> {
     let old_db_path = config::effective_db_path();
     let old_data_dir = config::effective_data_dir();

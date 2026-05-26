@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs";
 import * as api from "@/lib/tauri";
+import { isAndroid } from "@/lib/platform";
 import { useUIStore } from "@/stores/uiStore";
 import { Button } from "@/components/common/Button";
 
@@ -75,7 +77,19 @@ export function ExportControls() {
       if (!filePath && manualPath) filePath = manualPath;
       if (!filePath) { setIsExporting(false); return; }
 
-      await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);
+      if (isAndroid()) {
+        // Content-based export: Rust returns data, frontend writes via plugin-fs
+        const result = await api.exportDataToContent(password, mode, format, mode === "date" ? selectedDate : undefined);
+        if (typeof result === "string") {
+          await writeTextFile(filePath, result);
+        } else {
+          // XLSX: number array → Uint8Array → binary write
+          const bytes = new Uint8Array(result);
+          await writeFile(filePath, bytes);
+        }
+      } else {
+        await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);
+      }
       addToast(t('settings.exportSuccess'), "success");
       setPassword(""); setConfirmPassword("");
     } catch (e) {
@@ -178,13 +192,15 @@ export function ExportControls() {
         </div>
       )}
 
-      <div>
-        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('settings.savePath')}</label>
-        <input type="text" value={manualPath}
-          onChange={(e) => setManualPath(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
-          placeholder={t('settings.savePathPlaceholder')} />
-      </div>
+      {!isAndroid() && (
+        <div>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('settings.savePath')}</label>
+          <input type="text" value={manualPath}
+            onChange={(e) => setManualPath(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg"
+            placeholder={t('settings.savePathPlaceholder')} />
+        </div>
+      )}
 
       <Button className="w-full" onClick={handleExport} isLoading={isExporting}>
         {t('settings.exportButton')}

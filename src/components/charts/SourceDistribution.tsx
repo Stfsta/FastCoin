@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useTranslation } from "react-i18next";
 import { formatAmount } from "@/utils/format";
+import { isMobile } from "@/lib/platform";
 
 interface SourceTotal {
   sourceId: string;
@@ -37,14 +38,14 @@ export function SourceDistribution({ perSource }: SourceDistributionProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{t('stats.sourceDist')}</h3>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={isMobile() ? 180 : 220}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={50}
-            outerRadius={80}
+            innerRadius={isMobile() ? 38 : 50}
+            outerRadius={isMobile() ? 65 : 80}
             paddingAngle={2}
             dataKey="value"
           >

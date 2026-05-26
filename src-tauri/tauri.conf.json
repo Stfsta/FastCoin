@@ -43,7 +43,8 @@
       "wix": {
         "language": "zh-CN"
       }
-    }
+    },
+    "android": {}
   },
   "plugins": {}
 }

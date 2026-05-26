@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 pub fn default_app_data_dir() -> PathBuf {
+    #[cfg(target_os = "android")]
+    {
+        PathBuf::from("/data/data/com.fastcoin.app/files/FastCoin")
+    }
     #[cfg(target_os = "windows")]
     {
         let local = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
@@ -106,4 +110,22 @@ pub fn effective_db_path() -> PathBuf {
         Some(ref custom) if !custom.is_empty() => PathBuf::from(custom),
         _ => effective_data_dir().join("fastcoin.db"),
     }
+}
+
+/// Resolve the database path from a given data directory.
+/// Checks for a custom dbPath in config.json within the data dir.
+pub fn resolve_db_path(data_dir: &std::path::Path) -> PathBuf {
+    let config_path = data_dir.join("config.json");
+    if config_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config_path) {
+            if let Ok(config) = serde_json::from_str::<AppConfig>(&content) {
+                if let Some(ref custom) = config.db_path {
+                    if !custom.is_empty() {
+                        return PathBuf::from(custom);
+                    }
+                }
+            }
+        }
+    }
+    data_dir.join("fastcoin.db")
 }

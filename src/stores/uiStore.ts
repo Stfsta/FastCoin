@@ -10,6 +10,7 @@ interface Toast {
 
 interface UIState {
   activeMobilePanel: MobilePanel;
+  panelHistory: MobilePanel[];
   toasts: Toast[];
   // Panel widths as fractions (0–1), left + center + right = 1
   leftWidth: number;
@@ -20,6 +21,7 @@ interface UIState {
   selectedDate: string;
 
   setActiveMobilePanel: (panel: MobilePanel) => void;
+  goBack: () => boolean;
   addToast: (message: string, type?: Toast["type"]) => void;
   removeToast: (id: string) => void;
   setLeftWidth: (w: number) => void;
@@ -31,15 +33,27 @@ interface UIState {
 const MIN_PANEL = 0.12;
 const MAX_PANEL = 0.45;
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   activeMobilePanel: "entry",
+  panelHistory: [],
   toasts: [],
   leftWidth: 0.22,
   rightWidth: 0.25,
   leftFormFraction: 0.5,
   selectedDate: new Date().toISOString().slice(0, 10),
 
-  setActiveMobilePanel: (panel) => set({ activeMobilePanel: panel }),
+  setActiveMobilePanel: (panel) => set((state) => ({
+    activeMobilePanel: panel,
+    panelHistory: [...state.panelHistory, state.activeMobilePanel],
+  })),
+
+  goBack: () => {
+    const history = get().panelHistory;
+    if (history.length === 0) return false;
+    const prev = history[history.length - 1];
+    set({ activeMobilePanel: prev, panelHistory: history.slice(0, -1) });
+    return true;
+  },
 
   addToast: (message, type = "info") => {
     const id = Math.random().toString(36).slice(2);

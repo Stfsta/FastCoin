@@ -1,10 +1,11 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { MobileTabBar } from "./MobileTabBar";
 import { Toast } from "@/components/common/Toast";
 import { ExpensePanel } from "@/components/expense/ExpensePanel";
 import { StatsDashboard } from "@/components/stats/StatsDashboard";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { isMobile } from "@/lib/platform";
 
 function ResizeHandle({ onDrag, vertical = false }: { onDrag: (delta: number) => void; vertical?: boolean }) {
   const dragging = useRef(false);
@@ -75,8 +76,23 @@ export function AppShell() {
 
   const centerWidth = 1 - leftWidth - rightWidth;
 
+  // Android back button: intercept popstate to navigate panel history
+  useEffect(() => {
+    if (!isMobile()) return;
+    window.history.pushState(null, "");
+    const handlePopState = () => {
+      if (!useUIStore.getState().goBack()) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, "");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col bg-gray-50 dark:bg-gray-900" style={{ height: "100dvh" }}>
       {/* Desktop 3-column layout */}
       <div
         ref={containerRef}

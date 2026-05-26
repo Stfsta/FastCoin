@@ -4,6 +4,7 @@ import i18n from "@/i18n";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppSettings, ThemeMode } from "@/types";
 import * as api from "@/lib/tauri";
+import { isAndroid } from "@/lib/platform";
 import { useUIStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useDataStore } from "@/stores/dataStore";
@@ -109,8 +110,8 @@ export function GeneralSettings() {
         </select>
       </div>
 
-      {/* Data Storage Path */}
-      <DataPathSetting />
+      {/* Data Storage Path — hidden on Android (scoped storage) */}
+      {!isAndroid() && <DataPathSetting />}
 
       {settings && (
         <div className="pt-4 border-t border-gray-100 dark:border-gray-700">

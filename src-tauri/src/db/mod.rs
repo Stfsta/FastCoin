@@ -3,12 +3,11 @@ pub mod seed;
 
 use rusqlite::Connection;
 
-pub fn init_db() -> Result<Connection, Box<dyn std::error::Error>> {
-    let db_path = crate::config::effective_db_path();
+pub fn init_db_at(db_path: &std::path::Path) -> Result<Connection, Box<dyn std::error::Error>> {
     if let Some(parent) = db_path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let conn = Connection::open(&db_path)?;
+    let conn = Connection::open(db_path)?;
 
     conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
 

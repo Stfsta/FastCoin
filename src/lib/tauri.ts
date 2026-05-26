@@ -243,3 +243,33 @@ export async function importConfirm(
 ): Promise<void> {
   return invoke("import_confirm", { filePath, password, strategy });
 }
+
+export async function exportDataToContent(
+  password: string,
+  mode: string,
+  format: string,
+  date?: string,
+): Promise<string | number[]> {
+  const result = await invoke<unknown>("export_data_to_content", {
+    password, mode, format, date: date ?? null,
+  });
+  // Rust returns serde_json::Value: String or Array<Number>
+  if (typeof result === "string") return result;
+  if (Array.isArray(result)) return result as number[];
+  return String(result);
+}
+
+export async function importPreviewFromContent(
+  fileContent: string,
+  password: string,
+): Promise<ImportDiff> {
+  return invoke("import_preview_from_content", { fileContent, password });
+}
+
+export async function importConfirmFromContent(
+  fileContent: string,
+  password: string,
+  strategy: MergeStrategy,
+): Promise<void> {
+  return invoke("import_confirm_from_content", { fileContent, password, strategy });
+}
