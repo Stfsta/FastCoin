@@ -176,6 +176,10 @@ out/
 *.p12
 *.pfx
 
+# Android signing
+src-tauri/gen/android/keystore.properties
+src-tauri/gen/android/app/fastcoin-release.jks
+
 # ============================================================
 # Logs
 # ============================================================

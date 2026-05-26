@@ -13,7 +13,22 @@ val tauriProperties = Properties().apply {
     }
 }
 
+val keystoreProperties = Properties().apply {
+    val propFile = file("../keystore.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
+
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProperties.getProperty("storeFile"))
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            storePassword = keystoreProperties.getProperty("storePassword")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+        }
+    }
     compileSdk = 36
     namespace = "com.fastcoin.app"
     defaultConfig {
@@ -38,6 +53,7 @@ android {
         }
         getByName("release") {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))

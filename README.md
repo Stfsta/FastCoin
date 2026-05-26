@@ -90,6 +90,42 @@ npx tauri android build
 构建产物：
 - `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk`
 
+> ⚠️ 上述产物为**未签名 APK**，Android 会拒绝安装。需按下方「签名配置」步骤生成签名后重新构建。
+
+#### 签名配置
+
+Release APK 必须经过数字签名才能安装。首次构建前需完成以下一次性配置：
+
+**1. 生成密钥库**（使用 JDK 自带的 `keytool`）：
+
+```bash
+keytool -genkey -v \
+  -keystore src-tauri/gen/android/app/fastcoin-release.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias fastcoin
+```
+
+按提示设置密码并记住，密钥库有效期为约 27 年。**务必妥善保管此文件**，丢失后将无法更新已安装的应用。
+
+**2. 创建签名配置文件** `src-tauri/gen/android/keystore.properties`：
+
+```properties
+storeFile=fastcoin-release.jks
+keyAlias=fastcoin
+storePassword=你设置的密钥库密码
+keyPassword=你设置的密钥密码
+```
+
+**3. 重新构建**：
+
+```bash
+npx tauri android build
+```
+
+构建产物将变为已签名的 `app-universal-release.apk`（文件名不再含 `unsigned`），可直接安装到手机。
+
+> 注：`keystore.properties` 和 `fastcoin-release.jks` 已在 `.gitignore` 中排除，不会提交到版本库。
+
 ### 数据存储位置
 
 | 系统 | 路径 |
