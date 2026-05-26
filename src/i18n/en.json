@@ -29,6 +29,7 @@
     "deleted": "Deleted",
     "deleteFail": "Delete failed: {{error}}",
     "recentRecords": "Recent Records",
+    "newEntry": "Add Record",
     "noRecords": "No records yet",
     "noRecordsHint": "Add your first expense"
   },

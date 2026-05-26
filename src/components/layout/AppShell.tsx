@@ -128,7 +128,7 @@ export function AppShell() {
       </div>
 
       {/* Mobile single-panel layout */}
-      <div className="flex-1 lg:hidden overflow-hidden">
+      <div className="flex-1 lg:hidden overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         {activeMobilePanel === "entry" && <ExpensePanel />}
         {activeMobilePanel === "stats" && <StatsDashboard />}
         {activeMobilePanel === "settings" && <SettingsPanel />}

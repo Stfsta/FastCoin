@@ -8,7 +8,6 @@ import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
 import { formatAmount } from "@/utils/format";
 import { useSettingsStore, CURRENCY_SYMBOLS } from "@/stores/settingsStore";
-import { formatDate } from "date-fns";
 
 export function ExpenseForm() {
   const { t } = useTranslation();
@@ -90,9 +89,6 @@ export function ExpenseForm() {
       setDisplayAmount("");
       setCategoryId(null);
       setNote("");
-      const today = formatDate(new Date(), "yyyy-MM-dd");
-      setDate(today);
-      setSelectedDate(today);
     } catch (e) {
       addToast(t('expense.fail', { error: String(e) }), "error");
     } finally {
@@ -165,12 +161,6 @@ export function ExpenseForm() {
       {/* Payment Source Picker */}
       <SourcePicker selectedId={sourceId} onSelect={setSourceId} />
 
-      {/* Category Picker */}
-      <CategoryPicker selectedId={categoryId} onSelect={setCategoryId} />
-
-      {/* Note Input */}
-      <NoteInput value={note} onChange={setNote} />
-
       {/* Date Quick Select */}
       <DateQuickSelect value={date} onChange={handleDateChange} />
 
@@ -184,6 +174,12 @@ export function ExpenseForm() {
       >
         {isSubmitting ? t('expense.submitting') : amount ? `${t('expense.record')} ${formatAmount(Number(amount))}` : t('expense.submit')}
       </button>
+
+      {/* Category Picker */}
+      <CategoryPicker selectedId={categoryId} onSelect={setCategoryId} />
+
+      {/* Note Input */}
+      <NoteInput value={note} onChange={setNote} />
     </div>
   );
 }

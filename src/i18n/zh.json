@@ -29,6 +29,7 @@
     "deleted": "已删除",
     "deleteFail": "删除失败: {{error}}",
     "recentRecords": "最近记录",
+    "newEntry": "添加记录",
     "noRecords": "还没有消费记录",
     "noRecordsHint": "添加你的第一笔消费吧"
   },
