@@ -65,6 +65,7 @@ pub fn run() {
             commands::import_cmd::import_confirm_from_content,
             commands::export_cmd::export_data_to_content,
             commands::export_cmd::export_data_to_temp,
+            commands::export_cmd::export_data_to_bytes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

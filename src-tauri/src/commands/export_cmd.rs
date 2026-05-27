@@ -99,3 +99,46 @@ pub async fn export_data_to_temp(
     .await
     .map_err(|e| e.to_string())?
 }
+
+#[tauri::command]
+pub async fn export_data_to_bytes(
+    state: State<'_, AppState>,
+    password: String,
+    mode: String,
+    format: String,
+    date: Option<String>,
+) -> Result<String, String> {
+    let db = state.db.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db.lock().map_err(|e| e.to_string())?;
+        match format.as_str() {
+            "fastcoin" => {
+                let content = crate::services::export_service::export_fastcoin_to_content(
+                    &conn, &password, &mode, date.as_deref(),
+                )
+                .map_err(|e| e.to_string())?;
+                Ok(base64_encode(content.as_bytes()))
+            }
+            "csv" => {
+                let content =
+                    crate::services::export_service::export_csv_to_content(&conn)
+                        .map_err(|e| e.to_string())?;
+                Ok(base64_encode(content.as_bytes()))
+            }
+            "xlsx" => {
+                let bytes =
+                    crate::services::export_service::export_xlsx_to_bytes(&conn)
+                        .map_err(|e| e.to_string())?;
+                Ok(base64_encode(&bytes))
+            }
+            _ => Err(format!("Unsupported export format: {}", format)),
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+fn base64_encode(data: &[u8]) -> String {
+    use base64ct::Encoding;
+    base64ct::Base64::encode_string(data)
+}

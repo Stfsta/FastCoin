@@ -8,6 +8,7 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "fs:default",
+    "fs:scope-app-recursive",
     "fs:allow-read-text-file",
     "fs:allow-read-file",
     "fs:allow-write-text-file",

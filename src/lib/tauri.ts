@@ -270,6 +270,17 @@ export async function exportDataToTemp(
   });
 }
 
+export async function exportDataToBytes(
+  password: string,
+  mode: string,
+  format: string,
+  date?: string,
+): Promise<string> {
+  return invoke<string>("export_data_to_bytes", {
+    password, mode, format, date: date ?? null,
+  });
+}
+
 export async function importPreviewFromContent(
   fileContent: string,
   password: string,

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { writeTextFile, writeFile, readTextFile, readFile, remove } from "@tauri-apps/plugin-fs";
+import { writeFile } from "@tauri-apps/plugin-fs";
 import * as api from "@/lib/tauri";
 import { isAndroid } from "@/lib/platform";
 import { useUIStore } from "@/stores/uiStore";
@@ -78,21 +78,18 @@ export function ExportControls() {
       if (!filePath) { setIsExporting(false); return; }
 
       if (isAndroid()) {
-        // Temp-file export: Rust writes data to local temp, frontend copies to SAF URI
-        const tempPath = await api.exportDataToTemp(
+        // Content-based export: Rust generates data in memory, frontend writes to SAF URI.
+        // Avoids the fs plugin scope issue on Android where $APPDATA resolves differently
+        // from app.path().app_data_dir(), causing "forbidden path" for temp files.
+        const base64 = await api.exportDataToBytes(
           password, mode, format, mode === "date" ? selectedDate : undefined,
         );
-        try {
-          if (format === "xlsx") {
-            const bytes = await readFile(tempPath);
-            await writeFile(filePath, bytes);
-          } else {
-            const text = await readTextFile(tempPath);
-            await writeTextFile(filePath, text);
-          }
-        } finally {
-          try { await remove(tempPath); } catch { /* ignore cleanup failure */ }
+        const binaryStr = atob(base64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
         }
+        await writeFile(filePath, bytes);
       } else {
         await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);
       }
