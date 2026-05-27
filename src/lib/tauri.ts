@@ -259,6 +259,17 @@ export async function exportDataToContent(
   return String(result);
 }
 
+export async function exportDataToTemp(
+  password: string,
+  mode: string,
+  format: string,
+  date?: string,
+): Promise<string> {
+  return invoke<string>("export_data_to_temp", {
+    password, mode, format, date: date ?? null,
+  });
+}
+
 export async function importPreviewFromContent(
   fileContent: string,
   password: string,

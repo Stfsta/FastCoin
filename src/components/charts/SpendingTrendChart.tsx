@@ -12,6 +12,18 @@ interface SpendingTrendChartProps {
   dailySeries: DailyTotal[];
 }
 
+function formatYAxisTick(v: number, mobile: boolean): string {
+  if (mobile) {
+    if (v >= 1000000) return `${+(v / 1000000).toFixed(1)}M`;
+    if (v >= 10000) return `${Math.round(v / 1000)}K`;
+    if (v >= 1000) return `${+(v / 1000).toFixed(1)}K`;
+    if (Number.isInteger(v)) return String(v);
+    return v >= 1 ? v.toFixed(0) : v.toFixed(2);
+  }
+  if (Number.isInteger(v)) return String(v);
+  return (Math.round(v * 100) / 100).toString();
+}
+
 export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
   const { t } = useTranslation();
 
@@ -33,7 +45,7 @@ export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{t('stats.trend')}</h3>
       <ResponsiveContainer width="100%" height={isMobile() ? 160 : 200}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: isMobile() ? -20 : -16, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, left: isMobile() ? 0 : -16, bottom: 0 }}>
           <defs>
             <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
@@ -42,7 +54,7 @@ export function SpendingTrendChart({ dailySeries }: SpendingTrendChartProps) {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="label" tick={{ fontSize: isMobile() ? 9 : 11 }} interval={isMobile() ? 1 : 0} stroke="#9CA3AF" />
-          <YAxis tick={{ fontSize: isMobile() ? 9 : 11 }} width={isMobile() ? 40 : 60} stroke="#9CA3AF" tickFormatter={(v) => formatAmount(v * 100)} />
+          <YAxis tick={{ fontSize: isMobile() ? 9 : 11 }} width={isMobile() ? 45 : 60} stroke="#9CA3AF" tickFormatter={(v) => formatYAxisTick(v, isMobile())} />
           <Tooltip
             formatter={(value: number) => [formatAmount(value * 100), t('stats.periodTotal')]}
             labelFormatter={(label) => `${t('expense.date')}: ${label}`}

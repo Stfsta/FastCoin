@@ -38,8 +38,8 @@ npx tauri build
 
 构建产物：
 - `src-tauri/target/release/fastcoin.exe` — 可直接运行的便携版
-- `src-tauri/target/release/bundle/nsis/FastCoin_0.3.0_x64-setup.exe` — NSIS 安装包（推荐分发）
-- `src-tauri/target/release/bundle/msi/FastCoin_0.3.0_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
+- `src-tauri/target/release/bundle/nsis/FastCoin_0.3.1_x64-setup.exe` — NSIS 安装包（推荐分发）
+- `src-tauri/target/release/bundle/msi/FastCoin_0.3.1_x64_zh-CN.msi` — MSI 安装包（需安装 WiX Toolset v3）
 
 ### 构建 Android APK
 

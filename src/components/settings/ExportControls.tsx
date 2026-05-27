@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { writeTextFile, writeFile } from "@tauri-apps/plugin-fs";
+import { writeTextFile, writeFile, readTextFile, readFile, remove } from "@tauri-apps/plugin-fs";
 import * as api from "@/lib/tauri";
 import { isAndroid } from "@/lib/platform";
 import { useUIStore } from "@/stores/uiStore";
@@ -78,14 +78,20 @@ export function ExportControls() {
       if (!filePath) { setIsExporting(false); return; }
 
       if (isAndroid()) {
-        // Content-based export: Rust returns data, frontend writes via plugin-fs
-        const result = await api.exportDataToContent(password, mode, format, mode === "date" ? selectedDate : undefined);
-        if (typeof result === "string") {
-          await writeTextFile(filePath, result);
-        } else {
-          // XLSX: number array → Uint8Array → binary write
-          const bytes = new Uint8Array(result);
-          await writeFile(filePath, bytes);
+        // Temp-file export: Rust writes data to local temp, frontend copies to SAF URI
+        const tempPath = await api.exportDataToTemp(
+          password, mode, format, mode === "date" ? selectedDate : undefined,
+        );
+        try {
+          if (format === "xlsx") {
+            const bytes = await readFile(tempPath);
+            await writeFile(filePath, bytes);
+          } else {
+            const text = await readTextFile(tempPath);
+            await writeTextFile(filePath, text);
+          }
+        } finally {
+          try { await remove(tempPath); } catch { /* ignore cleanup failure */ }
         }
       } else {
         await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);

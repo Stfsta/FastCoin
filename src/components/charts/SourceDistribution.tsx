@@ -35,17 +35,23 @@ export function SourceDistribution({ perSource }: SourceDistributionProps) {
     );
   }
 
+  const mobile = isMobile();
+  const baseHeight = mobile ? 140 : 170;
+  const legendRows = Math.ceil(data.length / (mobile ? 2 : 3));
+  const legendHeight = legendRows * (mobile ? 22 : 24);
+  const containerHeight = baseHeight + legendHeight;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{t('stats.sourceDist')}</h3>
-      <ResponsiveContainer width="100%" height={isMobile() ? 180 : 220}>
+      <ResponsiveContainer width="100%" height={containerHeight}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
-            cy="50%"
-            innerRadius={isMobile() ? 38 : 50}
-            outerRadius={isMobile() ? 65 : 80}
+            cy={mobile ? "38%" : "40%"}
+            innerRadius={mobile ? 32 : 44}
+            outerRadius={mobile ? 55 : 70}
             paddingAngle={2}
             dataKey="value"
           >
@@ -55,6 +61,9 @@ export function SourceDistribution({ perSource }: SourceDistributionProps) {
           </Pie>
           <Tooltip formatter={(value: number) => [formatAmount(value * 100), ""]} />
           <Legend
+            verticalAlign="bottom"
+            iconSize={10}
+            wrapperStyle={{ paddingTop: 4, fontSize: mobile ? 10 : 12, lineHeight: "20px" }}
             formatter={(value: string) => {
               const d = data.find((x) => x.name === value);
               return `${d?.icon || ""} ${value}`;

@@ -61,3 +61,41 @@ pub async fn export_data_to_content(
     .await
     .map_err(|e| e.to_string())?
 }
+
+#[tauri::command]
+pub async fn export_data_to_temp(
+    state: State<'_, AppState>,
+    password: String,
+    mode: String,
+    format: String,
+    date: Option<String>,
+) -> Result<String, String> {
+    let db = state.db.clone();
+    let data_dir = state.data_dir.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db.lock().map_err(|e| e.to_string())?;
+        let temp_dir = data_dir.join("tmp");
+        std::fs::create_dir_all(&temp_dir).map_err(|e| e.to_string())?;
+        let temp_id = uuid::Uuid::new_v4().to_string();
+        let temp_path = temp_dir.join(&temp_id);
+        let path_str = temp_path.to_str().ok_or("Invalid temp path")?;
+        match format.as_str() {
+            "fastcoin" => {
+                export_service::export_to_fastcoin(
+                    &conn, &password, &mode, path_str, date.as_deref(),
+                )
+                    .map_err(|e| e.to_string())?;
+            }
+            "csv" => {
+                export_service::export_to_csv(&conn, path_str).map_err(|e| e.to_string())?;
+            }
+            "xlsx" => {
+                export_service::export_to_xlsx(&conn, path_str).map_err(|e| e.to_string())?;
+            }
+            _ => return Err(format!("Unsupported export format: {}", format)),
+        }
+        Ok(path_str.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}

@@ -130,7 +130,7 @@ export function StatsDashboard() {
                 return (
                   <div key={s.sourceId} className="flex items-center gap-2">
                     <span>{s.sourceIcon}</span>
-                    <span className="text-sm text-gray-700 dark:text-gray-200 w-16 truncate">{s.sourceName}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-200 w-16 truncate" title={s.sourceName}>{s.sourceName}</span>
                     <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
