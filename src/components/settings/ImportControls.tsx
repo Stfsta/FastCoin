@@ -15,11 +15,14 @@ import { applyTheme } from "@/utils/theme";
 import { Button } from "@/components/common/Button";
 
 async function showOpenDialog(): Promise<string | null> {
+  const filters = isAndroid()
+    ? []
+    : [{ name: "FastCoin File", extensions: ["fastcoin", "json"] }];
   try {
     const mod = await import("@tauri-apps/plugin-dialog");
     if (mod.open) {
       const result = await mod.open({
-        filters: [{ name: "FastCoin File", extensions: ["fastcoin", "json"] }],
+        filters,
         multiple: false,
       });
       return result as string | null;
@@ -28,7 +31,7 @@ async function showOpenDialog(): Promise<string | null> {
   try {
     return await invoke("plugin:dialog|open", {
       options: {
-        filters: [{ name: "FastCoin File", extensions: ["fastcoin", "json"] }],
+        filters,
         multiple: false,
       },
     });

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicehash/tauri/dev/crates/tauri-config-schema/schema.json",
   "productName": "FastCoin",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "identifier": "com.fastcoin.app",
   "build": {
     "frontendDist": "../dist",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SourcePicker } from "./SourcePicker";
 import { CategoryPicker } from "./CategoryPicker";
@@ -6,8 +6,11 @@ import { NoteInput } from "./NoteInput";
 import { DateQuickSelect } from "./DateQuickSelect";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
+import { useNoteHistoryStore } from "@/stores/noteHistoryStore";
 import { formatAmount } from "@/utils/format";
 import { useSettingsStore, CURRENCY_SYMBOLS } from "@/stores/settingsStore";
+
+const MAX_AMOUNT_CENTS = 9_999_999_999;
 
 export function ExpenseForm() {
   const { t } = useTranslation();
@@ -28,7 +31,10 @@ export function ExpenseForm() {
   }, [setSelectedDate]);
 
   const addExpense = useExpenseStore((s) => s.addExpense);
-  const addToast = useUIStore((s) => s.addToast);
+  const addToastRef = useRef(useUIStore.getState().addToast);
+  useEffect(() => { addToastRef.current = useUIStore.getState().addToast; });
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; });
 
   // Parse display amount to cents
   const handleAmountChange = useCallback((value: string) => {
@@ -38,15 +44,20 @@ export function ExpenseForm() {
     if (parts.length > 2) return;
     if (parts[1] && parts[1].length > 2) return;
 
-    setDisplayAmount(cleaned);
-
     if (cleaned === "" || cleaned === ".") {
+      setDisplayAmount(cleaned);
       setAmount("");
       return;
     }
     const num = parseFloat(cleaned);
     if (isNaN(num)) return;
-    setAmount(String(Math.round(num * 100)));
+    const cents = Math.round(num * 100);
+    if (cents > MAX_AMOUNT_CENTS) {
+      addToastRef.current(tRef.current('expense.amountTooLarge'), "error");
+      return;
+    }
+    setDisplayAmount(cleaned);
+    setAmount(String(cents));
   }, []);
 
   const handleNumpadInput = useCallback((key: string) => {
@@ -70,7 +81,11 @@ export function ExpenseForm() {
 
   const handleSubmit = async () => {
     if (!amount || !sourceId) {
-      addToast(t('expense.needAmount'), "error");
+      addToastRef.current(t('expense.needAmount'), "error");
+      return;
+    }
+    if (Number(amount) > MAX_AMOUNT_CENTS) {
+      addToastRef.current(t('expense.amountTooLarge'), "error");
       return;
     }
     setIsSubmitting(true);
@@ -83,14 +98,17 @@ export function ExpenseForm() {
         note,
         date,
       });
-      addToast(t('expense.success'), "success");
+      addToastRef.current(t('expense.success'), "success");
+      if (note.trim()) {
+        useNoteHistoryStore.getState().addNote(note);
+      }
       // Reset form for next entry
       setAmount("");
       setDisplayAmount("");
       setCategoryId(null);
       setNote("");
     } catch (e) {
-      addToast(t('expense.fail', { error: String(e) }), "error");
+      addToastRef.current(t('expense.fail', { error: String(e) }), "error");
     } finally {
       setIsSubmitting(false);
     }

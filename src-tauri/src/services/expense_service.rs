@@ -2,8 +2,10 @@ use rusqlite::{params, Connection};
 
 use crate::{
     db::models::Expense,
-    utils::{error::AppResult, format::now_ms},
+    utils::{error::{AppError, AppResult}, format::now_ms},
 };
+
+const MAX_AMOUNT_CENTS: i64 = 9_999_999_999;
 
 pub fn get_expenses(
     conn: &Connection,
@@ -70,6 +72,15 @@ pub fn add_expense(
     note: &str,
     date: &str,
 ) -> AppResult<Expense> {
+    if amount <= 0 {
+        return Err(AppError::Validation("Amount must be positive".to_string()));
+    }
+    if amount > MAX_AMOUNT_CENTS {
+        return Err(AppError::Validation(format!(
+            "Amount {} exceeds maximum allowed {}",
+            amount, MAX_AMOUNT_CENTS
+        )));
+    }
     let id = uuid::Uuid::new_v4().to_string();
     let now = now_ms();
 
@@ -113,6 +124,15 @@ pub fn update_expense(
     let mut exp = get_expense_by_id(conn, id)?;
 
     if let Some(a) = amount {
+        if a <= 0 {
+            return Err(AppError::Validation("Amount must be positive".to_string()));
+        }
+        if a > MAX_AMOUNT_CENTS {
+            return Err(AppError::Validation(format!(
+                "Amount {} exceeds maximum allowed {}",
+                a, MAX_AMOUNT_CENTS
+            )));
+        }
         exp.amount = a;
     }
     if let Some(s) = source_id {

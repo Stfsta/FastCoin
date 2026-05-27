@@ -31,7 +31,13 @@
     "recentRecords": "Recent Records",
     "newEntry": "Add Record",
     "noRecords": "No records yet",
-    "noRecordsHint": "Add your first expense"
+    "noRecordsHint": "Add your first expense",
+    "amountTooLarge": "Amount exceeds limit (max 99,999,999.99)",
+    "paymentSource": "Payment Source",
+    "expenseDate": "Date",
+    "recentNotes": "Recent Notes",
+    "showRecentNotes": "Recent Notes",
+    "hideRecentNotes": "Hide"
   },
   "stats": {
     "title": "Financial Statistics",

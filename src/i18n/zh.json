@@ -31,7 +31,13 @@
     "recentRecords": "最近记录",
     "newEntry": "添加记录",
     "noRecords": "还没有消费记录",
-    "noRecordsHint": "添加你的第一笔消费吧"
+    "noRecordsHint": "添加你的第一笔消费吧",
+    "amountTooLarge": "金额超出上限（最大 99,999,999.99）",
+    "paymentSource": "支付来源",
+    "expenseDate": "日期",
+    "recentNotes": "最近备注",
+    "showRecentNotes": "最近备注",
+    "hideRecentNotes": "收起"
   },
   "stats": {
     "title": "财务统计",
