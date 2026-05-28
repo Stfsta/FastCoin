@@ -134,7 +134,16 @@ export function PeriodManager() {
         onClose={() => setShowAdd(false)}
         title={t('settings.addPeriod')}
       >
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "NumpadEnter") {
+              if ((e.target as HTMLElement).tagName === "BUTTON") return;
+              e.preventDefault();
+              handleAdd();
+            }
+          }}
+        >
           <div>
             <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.periodName')}</label>
             <input

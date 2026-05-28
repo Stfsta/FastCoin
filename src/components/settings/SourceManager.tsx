@@ -172,7 +172,17 @@ export function SourceManager() {
         onClose={() => { setShowAdd(false); setEditingSource(null); }}
         title={editingSource ? t('settings.editSource') : t('settings.addSource')}
       >
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "NumpadEnter") {
+              const tag = (e.target as HTMLElement).tagName;
+              if (tag === "BUTTON" || tag === "SELECT") return;
+              e.preventDefault();
+              editingSource ? handleEdit() : handleAdd();
+            }
+          }}
+        >
           <div>
             <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.name')}</label>
             <input

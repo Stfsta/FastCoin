@@ -114,22 +114,19 @@ export function ExpenseForm() {
     }
   };
 
-  // Keyboard shortcut: Enter (or Ctrl+Enter) to submit
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === "NumpadEnter") {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [amount, sourceId, categoryId, note, date]);
-
   const amountInYuan = amount ? (Number(amount) / 100).toFixed(2) : "0.00";
 
   return (
-    <div className="p-4 space-y-4">
+    <div
+      className="p-4 space-y-4"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === "NumpadEnter") {
+          if ((e.target as HTMLElement).tagName === "BUTTON") return;
+          e.preventDefault();
+          handleSubmit();
+        }
+      }}
+    >
       {/* Amount Display & Input */}
       <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
         <div className="flex items-baseline gap-1 mb-2">

@@ -115,7 +115,16 @@ export function CategoryManager() {
       </div>
 
       <Modal isOpen={showAdd || !!editingId} onClose={closeModal} title={editingId ? t("settings.editCategory") : t("settings.addCategory")}>
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "NumpadEnter") {
+              if ((e.target as HTMLElement).tagName === "BUTTON") return;
+              e.preventDefault();
+              editingId ? handleEdit() : handleAdd();
+            }
+          }}
+        >
           <div>
             <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('settings.name')}</label>
             <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}

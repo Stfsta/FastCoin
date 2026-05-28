@@ -41,6 +41,21 @@ async function showSaveDialog(defaultName: string, ext: string): Promise<string 
   return prompt(`Save path (${defaultName}):`, defaultName);
 }
 
+async function base64ToBytes(base64: string): Promise<Uint8Array> {
+  const binaryStr = atob(base64);
+  const len = binaryStr.length;
+  const bytes = new Uint8Array(len);
+  const CHUNK = 65536;
+  for (let i = 0; i < len; i += CHUNK) {
+    const end = Math.min(i + CHUNK, len);
+    for (let j = i; j < end; j++) {
+      bytes[j] = binaryStr.charCodeAt(j);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return bytes;
+}
+
 type ExportMode = "full" | "date" | "period";
 
 export function ExportControls() {
@@ -78,17 +93,10 @@ export function ExportControls() {
       if (!filePath) { setIsExporting(false); return; }
 
       if (isAndroid()) {
-        // Content-based export: Rust generates data in memory, frontend writes to SAF URI.
-        // Avoids the fs plugin scope issue on Android where $APPDATA resolves differently
-        // from app.path().app_data_dir(), causing "forbidden path" for temp files.
         const base64 = await api.exportDataToBytes(
           password, mode, format, mode === "date" ? selectedDate : undefined,
         );
-        const binaryStr = atob(base64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
+        const bytes = await base64ToBytes(base64);
         await writeFile(filePath, bytes);
       } else {
         await api.exportData(password, mode, format, filePath, mode === "date" ? selectedDate : undefined);
