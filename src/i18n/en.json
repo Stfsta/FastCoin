@@ -37,7 +37,12 @@
     "expenseDate": "Date",
     "recentNotes": "Recent Notes",
     "showRecentNotes": "Recent Notes",
-    "hideRecentNotes": "Hide"
+    "hideRecentNotes": "Hide",
+    "searchPlaceholder": "Search source, category, note...",
+    "filterByDate": "Filter by date",
+    "clearFilter": "Clear filter",
+    "noMatch": "No matching records",
+    "noMatchHint": "Try other keywords"
   },
   "stats": {
     "title": "Financial Statistics",

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
-import type { Expense, PaymentSource } from "@/types";
+import type { Expense, PaymentSource, Category } from "@/types";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
 import { formatAmount } from "@/utils/format";
@@ -16,6 +16,7 @@ export function ExpenseRow({ expense }: ExpenseRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [sources, setSources] = useState<PaymentSource[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const deleteExpense = useExpenseStore((s) => s.deleteExpense);
   const addToast = useUIStore((s) => s.addToast);
 
@@ -23,7 +24,12 @@ export function ExpenseRow({ expense }: ExpenseRowProps) {
     api.getPaymentSources().then(setSources).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    api.getCategories().then(setCategories).catch(() => {});
+  }, []);
+
   const source = sources.find((s) => s.id === expense.sourceId);
+  const category = categories.find((c) => c.id === expense.categoryId);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,7 +71,7 @@ export function ExpenseRow({ expense }: ExpenseRowProps) {
             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">-{formatAmount(expense.amount)}</span>
             {expense.categoryId && (
               <span className="text-2xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
-                🍔
+                {category?.icon || "📂"}
               </span>
             )}
           </div>
@@ -102,6 +108,12 @@ export function ExpenseRow({ expense }: ExpenseRowProps) {
               <span className="text-gray-400 dark:text-gray-500">{t('expense.paymentSource')}：</span>
               {source.icon} {source.name}
               {source.type && <span className="text-gray-400 dark:text-gray-500 ml-1">({sourceTypeLabels[source.type] || source.type})</span>}
+            </p>
+          )}
+          {category && (
+            <p>
+              <span className="text-gray-400 dark:text-gray-500">{t('expense.category')}：</span>
+              {category.icon} {category.name}
             </p>
           )}
           <p>

@@ -37,7 +37,12 @@
     "expenseDate": "日期",
     "recentNotes": "最近备注",
     "showRecentNotes": "最近备注",
-    "hideRecentNotes": "收起"
+    "hideRecentNotes": "收起",
+    "searchPlaceholder": "搜索来源、分类、备注...",
+    "filterByDate": "按日期筛选",
+    "clearFilter": "清除筛选",
+    "noMatch": "无匹配记录",
+    "noMatchHint": "尝试其他关键词"
   },
   "stats": {
     "title": "财务统计",
