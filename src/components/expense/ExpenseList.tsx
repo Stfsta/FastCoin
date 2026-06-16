@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -19,6 +19,7 @@ export function ExpenseList() {
 
   // Filter state
   const [searchText, setSearchText] = useState("");
+  const deferredSearchText = useDeferredValue(searchText.trim());
   const [filterDate, setFilterDate] = useState<string>("");
   const [sources, setSources] = useState<PaymentSource[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,16 +30,25 @@ export function ExpenseList() {
   }, [refreshKey]);
 
   useEffect(() => {
-    const today = formatDate(new Date(), "yyyy-MM-dd");
-    // Fetch last 7 days of expenses
-    const sevenDaysAgo = formatDate(
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      "yyyy-MM-dd",
-    );
-    fetchExpenses(sevenDaysAgo, today);
+    // Fetch ALL expenses — no date range limit.
+    // Filter/search still works across all data via client-side useMemo.
+    fetchExpenses();
   }, [fetchExpenses, refreshKey]);
 
-  // Filtered data
+  // Pre-build lookup maps for O(1) source/category name resolution
+  const sourceMap = useMemo(() => {
+    const map = new Map<string, PaymentSource>();
+    for (const s of sources) map.set(s.id, s);
+    return map;
+  }, [sources]);
+
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, Category>();
+    for (const c of categories) map.set(c.id, c);
+    return map;
+  }, [categories]);
+
+  // Filtered data — uses deferredSearchText to keep input responsive
   const filteredExpenses = useMemo(() => {
     let result = expenses;
 
@@ -46,14 +56,14 @@ export function ExpenseList() {
       result = result.filter((e) => e.date === filterDate);
     }
 
-    if (searchText.trim()) {
-      const q = searchText.trim().toLowerCase();
+    if (deferredSearchText) {
+      const q = deferredSearchText.toLowerCase();
       result = result.filter((e) => {
         if (e.note.toLowerCase().includes(q)) return true;
-        const src = sources.find((s) => s.id === e.sourceId);
+        const src = sourceMap.get(e.sourceId);
         if (src?.name.toLowerCase().includes(q)) return true;
         if (e.categoryId) {
-          const cat = categories.find((c) => c.id === e.categoryId);
+          const cat = categoryMap.get(e.categoryId);
           if (cat?.name.toLowerCase().includes(q)) return true;
         }
         return false;
@@ -61,7 +71,7 @@ export function ExpenseList() {
     }
 
     return result;
-  }, [expenses, filterDate, searchText, sources, categories]);
+  }, [expenses, filterDate, deferredSearchText, sourceMap, categoryMap]);
 
   // Group expenses by date
   const grouped = filteredExpenses.reduce<Record<string, typeof filteredExpenses>>(
@@ -139,7 +149,7 @@ export function ExpenseList() {
         </div>
       </div>
 
-      {/* No match empty state */}
+      {/* No match empty state — uses deferredSearchText to avoid flash during typing */}
       {groupedEntries.length === 0 ? (
         <div className="py-8 text-center">
           <div className="text-3xl mb-2">🔍</div>
@@ -150,7 +160,14 @@ export function ExpenseList() {
         groupedEntries.map(([date, items]) => {
           const total = items.reduce((sum, e) => sum + e.amount, 0);
           return (
-            <div key={date} className="mb-3">
+            <div
+              key={date}
+              className="mb-3"
+              style={{
+                contentVisibility: "auto",
+                containIntrinsicSize: `auto ${50 + items.length * 56}px`,
+              }}
+            >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-400 dark:text-gray-500">{date}</span>
                 <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -159,7 +176,7 @@ export function ExpenseList() {
               </div>
               <div className="space-y-1">
                 {items.map((exp) => (
-                  <ExpenseRow key={exp.id} expense={exp} />
+                  <ExpenseRow key={exp.id} expense={exp} sourceMap={sourceMap} categoryMap={categoryMap} />
                 ))}
               </div>
             </div>

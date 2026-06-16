@@ -1,6 +1,6 @@
 [package]
 name = "fastcoin"
-version = "0.4.0"
+version = "0.4.1"
 description = "FastCoin - 快捷记账"
 authors = ["Stfsta"]
 edition = "2021"

@@ -1,35 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import type { Expense, PaymentSource, Category } from "@/types";
 import { useExpenseStore } from "@/stores/expenseStore";
 import { useUIStore } from "@/stores/uiStore";
 import { formatAmount } from "@/utils/format";
-import * as api from "@/lib/tauri";
 
 interface ExpenseRowProps {
   expense: Expense;
+  sourceMap: Map<string, PaymentSource>;
+  categoryMap: Map<string, Category>;
 }
 
-export function ExpenseRow({ expense }: ExpenseRowProps) {
+export function ExpenseRow({ expense, sourceMap, categoryMap }: ExpenseRowProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [sources, setSources] = useState<PaymentSource[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const deleteExpense = useExpenseStore((s) => s.deleteExpense);
   const addToast = useUIStore((s) => s.addToast);
 
-  useEffect(() => {
-    api.getPaymentSources().then(setSources).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    api.getCategories().then(setCategories).catch(() => {});
-  }, []);
-
-  const source = sources.find((s) => s.id === expense.sourceId);
-  const category = categories.find((c) => c.id === expense.categoryId);
+  const source = sourceMap.get(expense.sourceId);
+  const category = expense.categoryId ? categoryMap.get(expense.categoryId) : undefined;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();

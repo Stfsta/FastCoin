@@ -1,22 +1,22 @@
 ---
-snapshot_version: v7.0
-generated_at: 2026-05-28 02:00 +08:00
+snapshot_version: v8.1
+generated_at: 2026-06-16 12:00 +08:00
 language: zh
-git_commit: 764ea38
+git_commit: 7106abf
 git_branch: main
 project_type: polyglot
-previous_version: v6.3
-previous_file: REPOSITORY_SNAPSHOT_v6.3_2026-05-27.md
+previous_version: v8.0
+previous_file: snapshot_archive/REPOSITORY_SNAPSHOT_v8.0_2026-05-29.md
 line_budget: 300
 ---
 
 ## TL;DR
 
-FastCoin 是一个纯本地、加密安全的个人快捷记账跨平台应用，使用 Tauri 2 (Rust) + React 18 (TypeScript) 构建，支持 Windows/macOS/Linux 桌面端及 Android 原生 APK（已配置 Release 签名）。支持三栏可拖拽布局（手机端 Tab 切换）、深色/浅色主题、中英文双语、自定义记账周期、可视化统计、AES-256-GCM 加密导入导出（完整/当日/当前周期）、Excel/CSV 导出、path.cfg 指针架构、Android SAF 内容模式导入导出、移动端安全区域避让、金额上限校验、记录展开详情、备注历史快选。数据存储在本地 SQLite，不依赖网络。v0.3.2 修复了 Android 端"完整导出"和"当日导出"因 fs 插件路径作用域不匹配导致的"forbidden path"错误。
+FastCoin 是一个纯本地、加密安全的个人快捷记账跨平台应用，使用 Tauri 2 (Rust) + React 18 (TypeScript) 构建，支持 Windows/macOS/Linux 桌面端及 Android 原生 APK（已配置 Release 签名）。支持三栏可拖拽布局（手机端 Tab 切换）、深色/浅色主题、中英文双语、自定义记账周期、可视化统计、AES-256-GCM 加密导入导出（完整/当日/当前周期）、Excel/CSV 导出、path.cfg 指针架构、Android SAF 内容模式导入导出、移动端安全区域避让、金额上限校验、记录展开详情、备注历史快选、最近记录关键词搜索与日期筛选。数据存储在本地 SQLite，不依赖网络。v8.1 将最近记录从仅显示近 7 天改为永久显示全部消费记录，并通过 CSS content-visibility 虚拟化、React useDeferredValue、O(1) Map 查找、消除 N+1 IPC 调用等多项优化保证大数量记录下的滚动与搜索流畅度。
 
 ## 1. 项目概览
 
-- **名称 / 版本**: `fastcoin` v0.3.2 (from `package.json` / `Cargo.toml`)
+- **名称 / 版本**: `fastcoin` v0.4.1 (from `package.json` / `Cargo.toml`)
 - **技术栈**: TypeScript (React 18 + Vite 6 + TailwindCSS 3.4 + Zustand 4 + Recharts 2 + i18next) + Rust (Tauri 2 + rusqlite + aes-gcm + chrono + rust_xlsxwriter + base64ct)
 - **仓库布局**:
 
@@ -59,7 +59,7 @@ FastCoin/
 
 - **路径**: `src/components/`
 - **职责**: React UI，按功能分 layout / expense / stats / charts / settings / common
-- **关键文件**: `AppShell.tsx` (100dvh+popstate返回键+safe-area避让+overflow-y-auto), `ExpensePanel.tsx` (手机端Tab切换), `ExpenseForm.tsx` (金额上限校验MAX_AMOUNT_CENTS+备注历史记录), `ExpenseRow.tsx` (点击展开支付来源/日期/完整备注), `NoteInput.tsx` (前3条备注预览+折叠展开快选), `Modal.tsx` (手机端底部弹窗), `ExportControls.tsx` (Android内容模式导出，绕过fs插件作用域), `ImportControls.tsx` (Android SAF+无扩展名过滤), `GeneralSettings.tsx` (Android隐藏DataPathSetting)
+- **关键文件**: `AppShell.tsx` (100dvh+popstate返回键+safe-area避让+overflow-y-auto), `ExpensePanel.tsx` (手机端Tab切换), `ExpenseForm.tsx` (金额上限校验MAX_AMOUNT_CENTS+备注历史记录+容器级onKeyDown Enter处理), `ExpenseList.tsx` (全量记录加载+content-visibility虚拟化+useDeferredValue搜索+O(1)Map过滤+无匹配空状态), `ExpenseRow.tsx` (接收sourceMap/categoryMap props O(1)查找+点击展开支付来源/分类/日期/完整备注), `NoteInput.tsx` (前3条备注预览+折叠展开快选), `Modal.tsx` (手机端底部弹窗), `ExportControls.tsx` (Android内容模式导出+chunked base64解码 绕过fs插件作用域), `ImportControls.tsx` (Android SAF+无扩展名过滤), `GeneralSettings.tsx` (Android隐藏DataPathSetting), `SourceManager.tsx` (弹窗内Enter触发添加), `CategoryManager.tsx` (弹窗内Enter触发添加), `PeriodManager.tsx` (弹窗内Enter触发添加)
 - **依赖模块**: MOD-STORE, MOD-TAURI-IPC, MOD-PLATFORM, MOD-FORMAT, MOD-TYPES, MOD-I18N
 
 ### MOD-STORE: 状态管理
@@ -94,7 +94,7 @@ FastCoin/
 
 - **路径**: `src/types/`
 - **职责**: TS 接口，与 Rust `#[serde(rename_all = "camelCase")]` 对应
-- **关键文件**: `expense.ts`, `paymentSource.ts`, `period.ts`, `export.ts` (ExportMode="full"|"date"|"period"), `settings.ts`
+- **关键文件**: `expense.ts`, `paymentSource.ts`, `category.ts`, `period.ts`, `export.ts` (ExportMode="full"|"date"|"period"), `settings.ts`
 
 ### MOD-TAURI-IPC: IPC 封装
 
@@ -127,7 +127,7 @@ FastCoin/
 
 - **路径**: `src-tauri/src/services/`
 - **职责**: 统计计算、导出(文件+内容模式)、导入 diff + 合并、金额校验
-- **关键文件**: `export_service.rs` (gather_full/date/period + export_to_fastcoin/csv/xlsx + content模式 + xlsx_to_bytes), `import_service.rs` (事务+外键排序+until_version), `stats_service.rs`, `expense_service.rs` (MAX_AMOUNT_CENTS=9_999_999_999 校验 + 正数校验)
+- **关键文件**: `export_service.rs` (gather_full/date/period + export_to_fastcoin/csv/xlsx + content模式 + xlsx_to_bytes), `import_service.rs` (事务+外键排序+until_version), `stats_service.rs`, `expense_service.rs` (MAX_AMOUNT_CENTS=9_999_999_999 校验 + 正数校验 + get_expenses 支持可选 start_date/end_date/source_id/limit)
 - **依赖模块**: MOD-DB, MOD-CRYPTO
 
 ### MOD-CRYPTO: 加密模块
@@ -156,10 +156,21 @@ FastCoin/
 2. MOD-CMD → MOD-SVC 金额正数+上限校验 → SQLite → MOD-STORE/dataStore.triggerRefresh() → 组件实时刷新
 3. 提交后日期保持用户选定值不变；备注写入 MOD-STORE/noteHistoryStore
 
+**Enter 键处理**:
+4. MOD-FEUI/ExpenseForm 容器级 `onKeyDown` 监听 Enter → 若焦点在 `BUTTON` 则交由浏览器原生 click 处理（消除桌面端重复提交）；否则调用 handleSubmit。事件不跨面板冒泡。
+5. 设置弹窗 (SourceManager/CategoryManager/PeriodManager) 各自 `onKeyDown` 监听 Enter → 触发对应的 handleAdd/handleEdit
+
 **Android 导出 (内容模式)**:
-1. MOD-FEUI/ExportControls 调用 dialog.save() → SAF content URI
-2. MOD-TAURI-IPC/exportDataToBytes → MOD-CMD/export_data_to_bytes (async + spawn_blocking) → MOD-SVC 在内存中生成导出内容，base64 编码返回
-3. 前端 atob 解码 → new Uint8Array → writeFile 写入 SAF URI（ContentResolver 绕过 fs 插件作用域检查）
+6. MOD-FEUI/ExportControls 调用 dialog.save() → SAF content URI
+7. MOD-TAURI-IPC/exportDataToBytes → MOD-CMD/export_data_to_bytes (async + spawn_blocking) → MOD-SVC 在内存中生成导出内容，base64 编码返回
+8. 前端 chunked base64 解码 (64KB 分块 + setTimeout 让出主线程) → writeFile 写入 SAF URI（ContentResolver 绕过 fs 插件作用域检查）
+
+**最近记录全量加载与搜索筛选**:
+9. MOD-FEUI/ExpenseList 启动时 `fetchExpenses()` 不传日期参数 → 加载全部消费记录
+10. 并行拉取 sources/categories → 构建 O(1) `Map<id, object>` 查找表 → 通过 props 传递给 ExpenseRow（消除 N+1 IPC）
+11. `useDeferredValue(searchText)` 保持输入框响应 → `useMemo` 过滤: 日期精确匹配 AND 关键词大小写不敏感匹配（Map.get O(1) 查找来源名/分类名/备注文本）
+12. 渲染使用 CSS `content-visibility: auto` + `contain-intrinsic-size` 浏览器原生虚拟化 — 视口外日期组跳过渲染
+13. 无匹配时显示空状态提示；筛选/搜索对所有数据生效
 
 ## 5. 数据模型与存储
 
@@ -204,28 +215,37 @@ FastCoin/
   - MOD-FEUI/SpendingTrendChart Y轴手机端使用K/M缩写格式 (>=1K/10K/1M)，无负left margin
   - MOD-FEUI/SourceDistribution 容器高度动态计算，cy上移，Legend有wrapperStyle
   - capabilities/default.json 包含 `fs:scope-app-recursive` 权限（全局作用域，防御性）
+  - Enter 键不全局绑定；各面板/弹窗通过容器级 `onKeyDown` 独立处理，BUTTON 聚焦时交由浏览器原生 click 避免重复提交
+  - Android 导出 base64 解码采用 64KB 分块 + setTimeout(0) 让出主线程，避免切换页面时卡顿
+  - MOD-FEUI/ExpenseList 无日期参数调用 `fetchExpenses()` 加载全部记录；搜索与日期筛选为客户端本地过滤（useMemo），AND 组合逻辑；搜索匹配来源名/分类名/备注文本（大小写不敏感），使用 O(1) Map.get 替代 Array.find；输入框 useDeferredValue 保持大数量搜索不卡顿；日期组使用 CSS content-visibility:auto 浏览器原生虚拟化，视口外 DOM 跳过渲染
+  - MOD-FEUI/ExpenseRow 通过 props 接收 sourceMap/categoryMap（Map<id, object>），不再独立发起 IPC；分类显示 O(1) 查找，回退图标为 📂
 - **性能 / 安全热点**:
   - PBKDF2 600K 迭代已移至 spawn_blocking 后台线程（Android 内容模式命令）
   - 桌面端 export_data/import_preview/import_confirm 仍为同步（主线程）
   - `set_db_path` 执行 WAL checkpoint + 文件拷贝，大数据库迁移耗时
   - export_data_to_bytes 返回 base64 编码内容，数据量较大时需关注 IPC 消息大小（个人记账场景通常在安全范围内）
+  - ExpenseList 全量加载后内存驻留所有 Expense 对象；过滤用 useMemo 惰性计算；渲染用 CSS content-visibility 限制实际 DOM 节点数
 
 ## 9. 文件路径索引
 
 - `src/components/charts/SourceDistribution.tsx` → MOD-FEUI — 动态高度+图例布局
 - `src/components/charts/SpendingTrendChart.tsx` → MOD-FEUI — Y轴K/M缩写+零left margin
-- `src/components/common/Modal.tsx` → MOD-FEUI — 手机端底部弹窗
+- `src/components/common/Modal.tsx` → MOD-FEUI — 手机端底部弹窗+Escape关闭
 - `src/components/expense/DateQuickSelect.tsx` → MOD-FEUI — 日期快选+日期选择器
-- `src/components/expense/ExpenseForm.tsx` → MOD-FEUI — 金额上限校验+备注历史记录
+- `src/components/expense/ExpenseForm.tsx` → MOD-FEUI — 金额上限校验+备注历史+容器级Enter处理
+- `src/components/expense/ExpenseList.tsx` → MOD-FEUI — 全量加载+content-visibility虚拟化+useDeferredValue搜索+O(1)Map过滤+空状态
 - `src/components/expense/ExpensePanel.tsx` → MOD-FEUI — 手机端Tab切换
-- `src/components/expense/ExpenseRow.tsx` → MOD-FEUI — 点击展开支付来源/日期/完整备注
+- `src/components/expense/ExpenseRow.tsx` → MOD-FEUI — props接收sourceMap/categoryMap O(1)查找+展开详情含分类
 - `src/components/expense/NoteInput.tsx` → MOD-FEUI — 前3条预览+折叠快选
 - `src/components/layout/AppShell.tsx` → MOD-FEUI — 100dvh+popstate返回键+overflow-y-auto
-- `src/components/settings/ExportControls.tsx` → MOD-FEUI — Android内容模式导出(base64→SAF)
+- `src/components/settings/CategoryManager.tsx` → MOD-FEUI — 弹窗内Enter触发添加/编辑
+- `src/components/settings/ExportControls.tsx` → MOD-FEUI — Android内容模式导出+chunked base64解码
 - `src/components/settings/ImportControls.tsx` → MOD-FEUI — Android SAF导入(无扩展名过滤)
+- `src/components/settings/PeriodManager.tsx` → MOD-FEUI — 弹窗内Enter触发添加
+- `src/components/settings/SourceManager.tsx` → MOD-FEUI — 弹窗内Enter触发添加/编辑
 - `src/components/stats/StatsDashboard.tsx` → MOD-FEUI — 来源名称title tooltip
-- `src/i18n/en.json` → MOD-I18N — 英文翻译
-- `src/i18n/zh.json` → MOD-I18N — 中文翻译
+- `src/i18n/en.json` → MOD-I18N — 英文翻译 (含 searchPlaceholder/filterByDate/clearFilter/noMatch/noMatchHint)
+- `src/i18n/zh.json` → MOD-I18N — 中文翻译 (含 搜索来源分类备注/按日期筛选/清除筛选/无匹配记录/尝试其他关键词)
 - `src/lib/platform.ts` → MOD-PLATFORM — isAndroid/isMobile 检测
 - `src/lib/tauri.ts` → MOD-TAURI-IPC — 类型安全 IPC (~33 API, 含 exportDataToBytes)
 - `src/stores/noteHistoryStore.ts` → MOD-STORE — 备注历史localStorage持久化
@@ -235,27 +255,24 @@ FastCoin/
 - `src-tauri/src/config.rs` → MOD-CONFIG — Android分支+resolve_db_path
 - `src-tauri/src/db/mod.rs` → MOD-DB — init_db_at(路径参数)
 - `src-tauri/src/lib.rs` → MOD-CMD — mobile_entry_point+setup闭包+Arc<Mutex>+data_dir
-- `src-tauri/src/services/expense_service.rs` → MOD-SVC — MAX_AMOUNT_CENTS校验
-- `src-tauri/gen/android/app/build.gradle.kts` → MOD-SIGN — signingConfigs+keystoreProperties
+- `src-tauri/src/services/expense_service.rs` → MOD-SVC — MAX_AMOUNT_CENTS校验+get_expenses(可选日期/来源/limit)
 - `vite.config.ts` → — android chrome105 target
 
 ## 10. 变更日志
 
-相对于 v6.3 的变更:
+相对于 v8.0 的变更:
 
-- **新增**: MOD-CMD/export_data_to_bytes — 异步命令，Rust 端在内存中生成导出内容并以 base64 字符串返回，绕过 Android fs 插件对 app_data_dir 临时文件的作用域拒绝问题
-- **新增**: MOD-TAURI-IPC/exportDataToBytes — 前端 IPC 封装，返回 `Promise<string>` (base64)
-- **变更**: MOD-FEUI/ExportControls — Android 导出流程从临时文件模式 (exportDataToTemp + readFile + writeFile + remove) 重写为内容模式 (exportDataToBytes + atob 解码 + writeFile)；移除 readTextFile/readFile/remove 的 fs 插件导入
-- **变更**: MOD-CMD ACL — capabilities/default.json 新增 `fs:scope-app-recursive` 权限，为所有 fs 插件命令提供防御性全局作用域
-- **版本**: v0.3.1 → v0.3.2
+- **变更**: MOD-FEUI/ExpenseList — 移除近 7 天日期限制，`fetchExpenses()` 无参数调用加载全部消费记录；新增 `useDeferredValue(searchText)` 保持搜索输入框响应不卡顿；新增 `content-visibility: auto` + `contain-intrinsic-size` CSS 浏览器原生虚拟化，视口外日期组跳过 DOM 渲染；新增 `useMemo` 预构建 `Map<string, PaymentSource>` 与 `Map<string, Category>` O(1) 查找表，替代每次过滤中的 `Array.find()` O(n) 遍历；通过 props 向 ExpenseRow 传递查找表
+- **变更**: MOD-FEUI/ExpenseRow — 移除内部 `useEffect` 中独立 `api.getPaymentSources()` / `api.getCategories()` IPC 调用（消除 N+1 问题）；Props 改为接收 `sourceMap: Map<string, PaymentSource>` 与 `categoryMap: Map<string, Category>`；查找改用 `Map.get()` O(1) 替代 `Array.find()` O(n)
+- **变更**: 最近记录界面行为 — 从仅显示近 7 天改为永久显示全部消费记录；搜索与日期筛选对所有历史数据生效
 
 ## 11. 快照元数据
 
-- Snapshot version: v7.0
-- Generated at: 2026-05-28 02:00 +08:00
+- Snapshot version: v8.1
+- Generated at: 2026-06-16 12:00 +08:00
 - Language: zh
-- Git commit: 764ea38
+- Git commit: 7106abf
 - Git branch: main
 - Project type: polyglot
-- Previous version: v6.3
-- Previous file: REPOSITORY_SNAPSHOT_v6.3_2026-05-27.md
+- Previous version: v8.0
+- Previous file: snapshot_archive/REPOSITORY_SNAPSHOT_v8.0_2026-05-29.md
